@@ -60,20 +60,15 @@ def send_message(
         messages.append({"role": "user", "content": data.message})
 
         # Отправляем в Groq
-        response = ai_service.client.chat.completions.create(
-            model=settings.GROQ_MODEL,
-            messages=messages,
-            temperature=0.7,
-            max_tokens=1024,
-        )
-
-        ai_response = response.choices[0].message.content
+        ai_response = ai_service.complete(messages)
 
         return {
             "response": ai_response,
             "status": "ok"
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))

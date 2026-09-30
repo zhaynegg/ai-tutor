@@ -3,7 +3,7 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, patch, Mock
 
 _test_dir = tempfile.TemporaryDirectory()
 os.environ['DATABASE_URL'] = f"sqlite:///{Path(_test_dir.name) / 'test.db'}"
@@ -64,6 +64,37 @@ class AppTests(unittest.TestCase):
             self.assertEqual(self.client.post('/auth/register',json=payload).status_code,503)
         with SessionLocal() as db:
             self.assertIsNone(db.query(User).filter_by(username=payload['username']).first())
+    def test_model_and_json_mode(self):
+        client = Mock()
+        client.chat.completions.create.return_value.choices = [Mock(message=Mock(content='{"score":100,"is_correct":true}'))]
+        with patch.object(settings, 'GROQ_API_KEY', 'test-key'), patch.object(settings, 'GROQ_MODEL', 'openai/gpt-oss-120b'), patch.object(ai_service, '_client', client):
+            result = ai_service.check_code('Print 1', 'print(1)')
+        self.assertEqual(result['score'], 100)
+        options = client.chat.completions.create.call_args.kwargs
+        self.assertEqual(options['model'], 'openai/gpt-oss-120b')
+        self.assertEqual(options['response_format'], {'type':'json_object'})
+
+    def test_unavailable_model_returns_503(self):
+        from groq import NotFoundError
+        import httpx
+        from app.services.auth_service import create_token, hash_password
+        with SessionLocal() as db:
+            user = User(username='model_error', email='modelerror@example.com', hashed_password=hash_password('password123'), is_verified=True)
+            db.add(user)
+            db.commit()
+            course = db.query(Course).first()
+            payload = {'course_id':course.id, 'lesson_id':course.lessons[0].id, 'code':'print(1)'}
+        self.client.cookies.set('access_token', create_token('model_error'))
+        client = Mock()
+        response = httpx.Response(404, request=httpx.Request('POST','https://api.groq.com/openai/v1/chat/completions'))
+        client.chat.completions.create.side_effect = NotFoundError('model unavailable', response=response, body={'error':{'code':'model_not_found'}})
+        with patch.object(settings, 'GROQ_API_KEY', 'test-key'), patch.object(ai_service, '_client', client):
+            result = self.client.post('/courses/check_lesson', json=payload)
+            self.assertEqual(result.status_code,503)
+            self.assertIn('GROQ_MODEL',result.json()['detail'])
+            result = self.client.post('/chat/send',json={'message':'hello'})
+            self.assertEqual(result.status_code,503)
+
     def test_no_key_does_not_break_startup(self):
         with self.assertRaisesRegex(RuntimeError,'GROQ_API_KEY'):
             _=ai_service.client

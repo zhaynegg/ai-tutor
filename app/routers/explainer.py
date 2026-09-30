@@ -26,6 +26,8 @@ def explain_error(request: ExplainErrorRequest, db: Session = Depends(get_db), a
             fix_suggestion=result.get("fix_suggestion", ""),
             example=result.get("example", "")
         )
+    except HTTPException:
+        raise
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))

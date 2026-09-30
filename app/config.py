@@ -8,7 +8,7 @@ load_dotenv(PROJECT_ROOT / ".env")
 
 class Settings:
     GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
-    GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+    GROQ_MODEL = os.getenv("GROQ_MODEL") or "openai/gpt-oss-120b"
     IS_RENDER = os.getenv("RENDER", "").lower() == "true"
     SECRET_KEY = os.getenv("SECRET_KEY") or secrets.token_urlsafe(48)
     ALGORITHM = "HS256"

@@ -34,6 +34,8 @@ def generate_task(
             hints=result.get("hints", []),
             expected_output=result.get("expected_output", "")
         )
+    except HTTPException:
+        raise
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))

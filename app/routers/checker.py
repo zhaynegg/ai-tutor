@@ -55,6 +55,8 @@ def check_code(
             execution_result=execution_result,
             suggestions=result.get("suggestions", [])
         )
+    except HTTPException:
+        raise
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))

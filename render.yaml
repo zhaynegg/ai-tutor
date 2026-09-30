@@ -13,6 +13,8 @@ services:
         generateValue: true
       - key: DATABASE_URL
         sync: false
+      - key: GROQ_MODEL
+        value: openai/gpt-oss-120b
       - key: GROQ_API_KEY
         sync: false
       - key: RESEND_API_KEY

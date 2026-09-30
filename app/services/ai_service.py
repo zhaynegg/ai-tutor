@@ -1,17 +1,12 @@
 import json
-import time
+import logging
+from fastapi import HTTPException
 from groq import Groq
 from app.config import settings
 
 
 class AIService:
-    """
-    Сервис для работы с Groq API.
-    Модель: llama-3.3-70b-versatile — бесплатная, быстрая, умная.
-    Лимит: 14400 запросов в день, 30 запросов в минуту.
-    """
-
-    MODEL = "llama-3.3-70b-versatile"
+    """Сервис Groq; модель задаётся переменной GROQ_MODEL."""
 
     def __init__(self):
         self._client = None
@@ -33,28 +28,46 @@ class AIService:
             text = text.rsplit("```", 1)[0]
         return text.strip()
 
-    def _send_request(self, system_prompt: str, user_message: str) -> str:
-        """Отправляет запрос в Groq и возвращает текст ответа."""
+    def complete(self, messages: list[dict], *, json_mode: bool = False) -> str:
+        """Возвращает ответ AI или безопасную HTTP-ошибку для клиента."""
         try:
-            response = self.client.chat.completions.create(
-                model=settings.GROQ_MODEL,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_message}
-                ],
-                temperature=0.7,
-                max_tokens=1024,
+            options = {"model": settings.GROQ_MODEL, "messages": messages,
+                       "temperature": 0.7, "max_tokens": 4096}
+            if json_mode:
+                options["response_format"] = {"type": "json_object"}
+            response = self.client.chat.completions.create(**options)
+            content = response.choices[0].message.content
+            if not content:
+                raise HTTPException(status_code=503, detail="AI вернул пустой ответ. Попробуйте ещё раз.")
+            return content
+        except HTTPException:
+            raise
+        except Exception as error:
+            status = getattr(error, "status_code", None)
+            body = getattr(error, "body", {})
+            detail = body.get("error", body) if isinstance(body, dict) else {}
+            code = detail.get("code") if isinstance(detail, dict) else None
+            logging.getLogger(__name__).error(
+                "Groq request failed: model=%s status=%s code=%s type=%s",
+                settings.GROQ_MODEL, status, code, type(error).__name__,
             )
-            return response.choices[0].message.content
+            if status == 404 or code == "model_not_found":
+                message = "Модель AI недоступна. Администратору нужно проверить GROQ_MODEL и доступ к модели в Groq."
+            elif status in (401, 403):
+                message = "AI недоступен: администратору нужно проверить ключ и разрешения Groq."
+            elif status == 429:
+                raise HTTPException(status_code=429, detail="Превышен лимит запросов AI. Попробуйте позже.") from error
+            elif not settings.GROQ_API_KEY:
+                message = "AI не настроен: администратору нужно добавить GROQ_API_KEY."
+            else:
+                message = "Сервис AI временно недоступен. Попробуйте позже."
+            raise HTTPException(status_code=503, detail=message) from error
 
-        except Exception as e:
-            error_str = str(e)
-            if "429" in error_str or "rate_limit" in error_str.lower():
-                raise Exception(
-                    "Превышен лимит запросов Groq. "
-                    "Подожди минуту и попробуй снова."
-                )
-            raise Exception(f"Ошибка Groq API: {error_str}")
+    def _send_request(self, system_prompt: str, user_message: str) -> str:
+        return self.complete([
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_message},
+        ], json_mode=True)
 
     def generate_task(self, topic: str, difficulty: str, language: str) -> dict:
         """Генерирует задание по программированию."""
@@ -75,7 +88,10 @@ class AIService:
 }}"""
 
         raw = self._send_request(system_prompt, user_message)
-        return json.loads(self._clean_json(raw))
+        try:
+            return json.loads(self._clean_json(raw))
+        except (ValueError, TypeError) as error:
+            raise HTTPException(status_code=503, detail="AI вернул некорректный ответ. Попробуйте ещё раз.") from error
 
     def check_code(self, task: str, code: str) -> dict:
         """Проверяет код студента и даёт обратную связь."""
@@ -99,7 +115,10 @@ class AIService:
 }}"""
 
         raw = self._send_request(system_prompt, user_message)
-        return json.loads(self._clean_json(raw))
+        try:
+            return json.loads(self._clean_json(raw))
+        except (ValueError, TypeError) as error:
+            raise HTTPException(status_code=503, detail="AI вернул некорректный ответ. Попробуйте ещё раз.") from error
 
     def explain_error(self, code: str, error: str, level: str) -> dict:
         """Объясняет ошибку простым языком под уровень студента."""
@@ -131,7 +150,10 @@ class AIService:
 }}"""
 
         raw = self._send_request(system_prompt, user_message)
-        return json.loads(self._clean_json(raw))
+        try:
+            return json.loads(self._clean_json(raw))
+        except (ValueError, TypeError) as error:
+            raise HTTPException(status_code=503, detail="AI вернул некорректный ответ. Попробуйте ещё раз.") from error
 
 
 # Единственный экземпляр
