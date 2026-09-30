@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Редакциялау — Админ{% endblock %}
+{% block page_title %}{{ course.icon }} {{ course.title }}{% endblock %}
+
+{% block content %}
+
+<div class="flex items-center justify-between mb-6">
+    <div class="text-muted text-sm">{{ course.lessons|length }} сабақ</div>
+    <a href="/admin/courses" class="btn btn-secondary btn-sm">← Артқа</a>
+</div>
+
+<!-- Жаңа сабақ қосу -->
+<div class="card mb-6">
+    <div class="card-title">➕ Жаңа сабақ</div>
+    <div class="form-group">
+        <label class="form-label">Сабақ атауы</label>
+        <input type="text" id="lesson-title" placeholder="Циклдарға кіріспе">
+    </div>
+    <div class="form-group">
+        <label class="form-label">Теория (HTML)</label>
+        <textarea id="lesson-theory" rows="5"
+            placeholder="<h3>Тақырып</h3><p>Мәтін...</p>"
+            style="font-family:var(--font-mono); font-size:13px"></textarea>
+    </div>
+    <div class="form-group">
+        <label class="form-label">Код мысалы</label>
+        <textarea id="lesson-code" class="code-editor" rows="5"
+            placeholder="# Код мысалы&#10;print('Сәлем!')"></textarea>
+    </div>
+    <div class="form-group">
+        <label class="form-label">Тапсырма</label>
+        <textarea id="lesson-task" rows="3"
+            placeholder="Бағдарлама жазыңыз..."></textarea>
+    </div>
+    <div class="form-group">
+        <label class="form-label">Күтілетін нәтиже</label>
+        <input type="text" id="lesson-output" placeholder="Сәлем, әлем!">
+    </div>
+    <div class="form-group">
+        <label class="form-label">Реті</label>
+        <input type="number" id="lesson-order"
+               value="{{ course.lessons|length + 1 }}"
+               style="max-width:100px">
+    </div>
+    <button class="btn btn-primary" onclick="createLesson({{ course.id }})">
+        ➕ Сабақ қосу
+    </button>
+</div>
+
+<!-- Сабақтар тізімі -->
+<div class="card">
+    <div class="card-title">📋 Курс сабақтары</div>
+    {% if course.lessons %}
+    <div class="lesson-list">
+        {% for lesson in course.lessons %}
+        <div class="lesson-item" id="lesson-{{ lesson.id }}"
+             style="pointer-events:none">
+            <span class="lesson-num">{{ loop.index }}</span>
+            <div style="flex:1">
+                <div class="lesson-title">{{ lesson.title }}</div>
+                <div class="text-muted text-sm">
+                    {{ (lesson.task or '')[:60] }}...
+                </div>
+            </div>
+            <div style="pointer-events:all">
+                <button onclick="deleteLesson({{ lesson.id }})"
+                        class="btn btn-danger btn-xs">
+                    🗑️ Жою
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty">
+        <div class="empty-icon">📖</div>
+        <div class="empty-title">Сабақтар жоқ</div>
+        <div class="empty-desc">Жоғарыда алғашқы сабақты қосыңыз</div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+async function createLesson(courseId) {
+    const data = {
+        title:           document.getElementById('lesson-title').value.trim(),
+        theory:          document.getElementById('lesson-theory').value,
+        code_example:    document.getElementById('lesson-code').value,
+        task:            document.getElementById('lesson-task').value,
+        expected_output: document.getElementById('lesson-output').value,
+        order:           parseInt(document.getElementById('lesson-order').value) || 1
+    };
+
+    if (!data.title || !data.task) {
+        alert('Атауы мен тапсырманы толтырыңыз!'); return;
+    }
+
+    const res = await fetch(`/admin/courses/${courseId}/lessons/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+
+    if (res.ok) { alert('Сабақ қосылды!'); location.reload(); }
+}
+
+async function deleteLesson(id) {
+    if (!confirm('Сабақты жою керек пе?')) return;
+    const res = await fetch(`/admin/lessons/${id}/delete`, { method: 'POST' });
+    if (res.ok) document.getElementById('lesson-' + id).remove();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Курстар — Админ{% endblock %}
+{% block page_title %}Курстарды басқару{% endblock %}
+
+{% block content %}
+
+<div class="flex items-center justify-between mb-6">
+    <div class="text-muted text-sm">Барлығы: {{ courses_data|length }} курс</div>
+    <a href="/admin" class="btn btn-secondary btn-sm">← Артқа</a>
+</div>
+
+<!-- Жаңа курс қосу -->
+<div class="card mb-6">
+    <div class="card-title">➕ Жаңа курс</div>
+    <div id="add-error" class="alert alert-error hidden"></div>
+    <div class="grid-2">
+        <div class="form-group">
+            <label class="form-label">Атауы</label>
+            <input type="text" id="new-title" placeholder="Бастаушыларға арналған Python">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Иконка</label>
+            <input type="text" id="new-icon" value="📚" style="max-width:80px">
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="form-label">Сипаттама</label>
+        <input type="text" id="new-desc" placeholder="Курстың қысқаша сипаттамасы">
+    </div>
+    <div class="form-group">
+        <label class="form-label">Реті</label>
+        <input type="number" id="new-order" value="1" style="max-width:100px">
+    </div>
+    <button class="btn btn-primary" onclick="createCourse()">
+        ➕ Курс құру
+    </button>
+</div>
+
+<!-- Курстар тізімі -->
+<div class="card">
+    <div class="card-title">📋 Барлық курстар</div>
+    <div class="table-wrap">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Иконка</th>
+                    <th>Атауы</th>
+                    <th>Сипаттама</th>
+                    <th>Сабақтар</th>
+                    <th>Реті</th>
+                    <th>Әрекеттер</th>
+                </tr>
+            </thead>
+            <tbody id="courses-table">
+                {% for item in courses_data %}
+                <tr id="course-row-{{ item.course.id }}">
+                    <td style="font-size:1.5rem">{{ item.course.icon }}</td>
+                    <td style="font-weight:600">{{ item.course.title }}</td>
+                    <td class="text-muted text-sm">
+                        {{ (item.course.description or '')[:50] }}
+                    </td>
+                    <td>
+                        <span class="badge badge-blue">{{ item.lessons_count }}</span>
+                    </td>
+                    <td class="text-muted">{{ item.course.order }}</td>
+                    <td>
+                        <div class="flex gap-2">
+                            <a href="/admin/courses/{{ item.course.id }}/edit"
+                               class="btn btn-secondary btn-xs">
+                                ✏️ Сабақтар
+                            </a>
+                            <button onclick="deleteCourse({{ item.course.id }})"
+                                    class="btn btn-danger btn-xs">
+                                🗑️
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+async function createCourse() {
+    const title = document.getElementById('new-title').value.trim();
+    const desc  = document.getElementById('new-desc').value.trim();
+    const icon  = document.getElementById('new-icon').value.trim() || '📚';
+    const order = parseInt(document.getElementById('new-order').value) || 0;
+
+    if (!title) {
+        document.getElementById('add-error').classList.remove('hidden');
+        document.getElementById('add-error').textContent = 'Атауын енгізіңіз!';
+        return;
+    }
+
+    const res = await fetch('/admin/courses/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, description: desc, icon, order })
+    });
+
+    if (res.ok) location.reload();
+}
+
+async function deleteCourse(id) {
+    if (!confirm('Курсты және оның барлық сабақтарын жою керек пе?')) return;
+    const res = await fetch(`/admin/courses/${id}/delete`, { method: 'POST' });
+    if (res.ok) document.getElementById('course-row-' + id).remove();
+}
+</script>
+{% endblock %}

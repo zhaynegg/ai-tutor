@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="kk" data-theme="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Bilim Al{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+</head>
+<body>
+
+{% if user %}
+<!-- ── LAYOUT С SIDEBAR ── -->
+<div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <a href="/" class="sidebar-logo">
+            <div class="sidebar-logo-icon">🎓</div>
+            <div>
+                <div class="sidebar-logo-text">Bilim Al</div>
+                <div class="sidebar-logo-sub">AI оқыту платформасы</div>
+            </div>
+        </a>
+
+        <nav class="sidebar-nav">
+
+            <div class="sidebar-section-label">Оқу</div>
+
+            <a href="/" class="sidebar-link {% if request.url.path == '/' %}active{% endif %}">
+                <span class="sidebar-link-icon">📚</span>
+                Курстар
+            </a>
+
+            <a href="/coding" class="sidebar-link {% if request.url.path == '/coding' %}active{% endif %}">
+                <span class="sidebar-link-icon">💻</span>
+                Практика
+            </a>
+
+            <a href="/chat" class="sidebar-link {% if request.url.path == '/chat' %}active{% endif %}">
+                <span class="sidebar-link-icon">💬</span>
+                AI көмекші
+            </a>
+
+            <div class="sidebar-section-label">Прогресс</div>
+
+            <a href="/dashboard" class="sidebar-link {% if request.url.path == '/dashboard' %}active{% endif %}">
+                <span class="sidebar-link-icon">📊</span>
+                Бақылау тақтасы
+            </a>
+
+            <a href="/quiz" class="sidebar-link {% if request.url.path == '/quiz' %}active{% endif %}">
+                <span class="sidebar-link-icon">🧠</span>
+                Диагностика
+            </a>
+
+            {% if user.is_admin %}
+            <div class="sidebar-section-label">Әкімшілік</div>
+            <a href="/admin" class="sidebar-link {% if '/admin' in request.url.path %}active{% endif %}">
+                <span class="sidebar-link-icon">⚙️</span>
+                Админ панелі
+            </a>
+            {% endif %}
+
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar">
+                    {{ user.username[0].upper() }}
+                </div>
+                <div class="sidebar-user-info">
+                    <div class="sidebar-username">{{ user.username }}</div>
+                    <div class="sidebar-user-role">{{ user.level | capitalize }}</div>
+                </div>
+                <div class="sidebar-user-actions">
+                    <button class="icon-btn" onclick="toggleTheme()" id="theme-btn"
+                            title="Тақырыпты ауыстыру">🌙</button>
+                    <button class="icon-btn" onclick="logout()"
+                            title="Шығу">→</button>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main">
+        <header class="topbar">
+            <div class="flex items-center gap-3">
+                <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+                <span class="topbar-title">{% block page_title %}{% endblock %}</span>
+            </div>
+            <div class="topbar-actions">
+                {% block topbar_actions %}{% endblock %}
+            </div>
+        </header>
+
+        <div class="page-content">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+</div>
+
+{% else %}
+<!-- ── СТРАНИЦЫ БЕЗ АВТОРИЗАЦИИ ── -->
+{% block auth_content %}{% endblock %}
+{% endif %}
+
+<script src="/static/js/main.js"></script>
+<script>
+// Применяем сохранённую тему
+(function() {
+    const t = localStorage.getItem('theme');
+    if (t === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        const btn = document.getElementById('theme-btn');
+        if (btn) btn.textContent = '☀️';
+    }
+})();
+</script>
+</body>
+</html>

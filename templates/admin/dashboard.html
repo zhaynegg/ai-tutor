@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Админ панелі — Bilim Al{% endblock %}
+{% block page_title %}Админ панелі{% endblock %}
+
+{% block content %}
+
+<!-- Статистика -->
+<div class="stats-grid mb-6">
+    <div class="stat-card">
+        <div class="stat-icon blue">👥</div>
+        <div class="stat-value">{{ total_users }}</div>
+        <div class="stat-label">Пайдаланушылар</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green">📚</div>
+        <div class="stat-value">{{ total_courses }}</div>
+        <div class="stat-label">Курстар</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon amber">📖</div>
+        <div class="stat-value">{{ total_lessons }}</div>
+        <div class="stat-label">Сабақ</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon blue">✅</div>
+        <div class="stat-value">{{ total_attempts }}</div>
+        <div class="stat-label">Әрекеттер</div>
+    </div>
+</div>
+
+<!-- Навигация -->
+<div class="grid-3 mb-6">
+    <a href="/admin/users" class="card" style="text-decoration:none; text-align:center; cursor:pointer; transition: box-shadow 0.2s;" onmouseover="this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.boxShadow=''">
+        <div style="font-size:32px; margin-bottom:8px">👥</div>
+        <div style="font-weight:600; color:var(--text-primary)">Пайдаланушылар</div>
+        <div class="text-muted text-sm">Аккаунттарды басқару</div>
+    </a>
+    <a href="/admin/courses" class="card" style="text-decoration:none; text-align:center; cursor:pointer; transition: box-shadow 0.2s;" onmouseover="this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.boxShadow=''">
+        <div style="font-size:32px; margin-bottom:8px">📚</div>
+        <div style="font-weight:600; color:var(--text-primary)">Курстар</div>
+        <div class="text-muted text-sm">Курстарды басқару</div>
+    </a>
+    <a href="/admin" class="card" style="text-decoration:none; text-align:center; cursor:pointer; transition: box-shadow 0.2s;" onmouseover="this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.boxShadow=''">
+        <div style="font-size:32px; margin-bottom:8px">📊</div>
+        <div style="font-weight:600; color:var(--text-primary)">Статистика</div>
+        <div class="text-muted text-sm">Платформа аналитикасы</div>
+    </a>
+</div>
+
+<!-- Соңғы пайдаланушылар -->
+<div class="card">
+    <div class="card-title">👥 Соңғы пайдаланушылар</div>
+    <div class="table-wrap">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Пайдаланушы</th>
+                    <th>Email</th>
+                    <th>Деңгей</th>
+                    <th>Рөл</th>
+                    <th>Күні</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in recent_users %}
+                <tr>
+                    <td>
+                        <div style="font-weight:600">{{ u.username }}</div>
+                        <div class="text-muted text-sm">{{ u.full_name or '—' }}</div>
+                    </td>
+                    <td class="text-muted">{{ u.email }}</td>
+                    <td>
+                        <span class="badge
+                            {% if u.level == 'advanced' %}badge-green
+                            {% elif u.level == 'intermediate' %}badge-amber
+                            {% else %}badge-blue{% endif %}">
+                            {{ u.level }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if u.is_admin %}
+                        <span class="badge badge-red">Админ</span>
+                        {% else %}
+                        <span class="badge badge-gray">Студент</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-muted text-sm">
+                        {{ u.created_at.strftime('%d.%m.%Y') }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <a href="/admin/users" class="btn btn-secondary btn-sm mt-4">
+        Барлық пайдаланушылар →
+    </a>
+</div>
+
+{% endblock %}

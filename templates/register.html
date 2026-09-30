@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Тіркелу — Bilim Al{% endblock %}
+
+{% block auth_content %}
+<div class="auth-page">
+    <div class="auth-card">
+        <div style="margin-bottom:24px">
+            <div class="auth-title">Аккаунт құру</div>
+        </div>
+
+        <div id="auth-error" class="alert alert-error hidden"></div>
+        <div id="auth-success" class="alert alert-success hidden"></div>
+
+        <div class="form-group">
+            <label class="form-label">Толық аты-жөні</label>
+            <input type="text" id="full_name" placeholder="аты тегі">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Пайдаланушы аты</label>
+            <input type="text" id="username" placeholder="username">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" id="email" placeholder="email@example.com">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Құпиясөз</label>
+            <input type="password" id="password" placeholder="кемінде 6 символ">
+        </div>
+
+        <button class="btn btn-primary btn-full" onclick="registerUser()"
+                style="margin-top:0.5rem">
+            Тіркелу
+        </button>
+
+        <div class="auth-footer">
+            Аккаунтыңыз бар ма? <a href="/login">Кіру</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block title %}{{ lesson.title }} — Bilim Al{% endblock %}
+{% block page_title %}{{ lesson.title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <!-- Теория -->
+    <section class="card">
+        <h2>📖 {{ lesson.title }}</h2>
+        <div class="theory-content">
+            {{ lesson.theory | safe }}
+        </div>
+    </section>
+
+    <!-- Код мысалы -->
+    {% if lesson.code_example %}
+    <div class="card mt-4">
+        <div class="card-title">💡 Код мысалы</div>
+        <div class="code-block">
+            <div class="code-header">
+                <div class="code-dots">
+                    <div class="code-dot"></div>
+                    <div class="code-dot"></div>
+                    <div class="code-dot"></div>
+                </div>
+                <span class="code-lang">python</span>
+                <button class="code-copy-btn">Көшіру</button>
+            </div>
+            <div class="code-content">{{ lesson.code_example }}</div>
+        </div>
+        <button class="btn btn-secondary btn-sm mt-4"
+                onclick="copyToEditor()">
+            ↓ Редакторға көшіру
+        </button>
+    </div>
+    {% endif %}
+
+    <!-- Тапсырма -->
+    <section class="card">
+        <h2>✏️ Практикалық тапсырма</h2>
+        <div class="task-desc" style="margin-bottom:1rem">
+            {{ lesson.task }}
+        </div>
+        {% if lesson.expected_output %}
+        <p class="expected-output">
+            <strong>Күтілетін нәтиже:</strong> {{ lesson.expected_output }}
+        </p>
+        {% endif %}
+
+        {% if progress and progress.is_done %}
+        <div class="success-msg" style="margin-top:1rem">
+            ✅ Тапсырма орындалды! Сіздің балыңыз: {{ progress.score|int }}/100
+        </div>
+        {% endif %}
+    </section>
+
+    <!-- Код редакторы -->
+    <div class="card mt-4">
+        <div class="card-title">💻 Код редакторы</div>
+        <textarea id="lesson-code" class="code-editor"
+            placeholder="# Кодыңызды осында жазыңыз..."
+            rows="14"></textarea>
+        <div class="btn-group mt-4">
+            <button class="btn btn-primary" id="check-btn"
+                    onclick="checkLessonCode()">
+                ✅ Шешімді тексеру
+            </button>
+            <button class="btn btn-secondary"
+                    onclick="getHint()">
+                💡 AI кеңесі
+            </button>
+        </div>
+    </div>
+
+    <!-- Нәтиже -->
+    <section class="card" id="result-section" style="display:none">
+        <h2>📊 Нәтиже</h2>
+        <div id="result-content"></div>
+    </section>
+
+    <!-- Навигация -->
+    <div style="display:flex; justify-content:space-between; margin-top:0.5rem">
+        <a href="/courses/{{ course_id }}" class="btn-secondary">
+            ← Сабақтарға
+        </a>
+        {% if next_lesson %}
+        <a href="/courses/{{ course_id }}/lessons/{{ next_lesson.id }}"
+           class="btn-primary" id="next-btn" style="margin-top:0">
+            Келесі сабақ →
+        </a>
+        {% endif %}
+    </div>
+
+</div>
+
+<script>
+const LESSON_ID  = {{ lesson.id }};
+const COURSE_ID  = {{ course_id }};
+const LESSON_TASK = `{{ lesson.task }}`;
+const CODE_EXAMPLE = `{{ lesson.code_example }}`;
+
+function copyToEditor() {
+    document.getElementById('lesson-code').value = CODE_EXAMPLE;
+}
+
+async function checkLessonCode() {
+    const code = document.getElementById('lesson-code').value.trim();
+    if (!code) { alert('Код жазыңыз!'); return; }
+
+    const btn = document.getElementById('check-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Тексерілуде...';
+
+    showResult('<div class="loader">⏳ AI шешімді тексеруде...</div>');
+
+    try {
+        const res = await fetch('/courses/check_lesson', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                lesson_id: LESSON_ID,
+                course_id: COURSE_ID,
+                code: code
+            })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Қате');
+
+        const scoreClass = data.score >= 80 ? 'score-good'
+                         : data.score >= 50 ? 'score-mid' : 'score-bad';
+        const status = data.is_correct ? '✅ Дұрыс!' : '❌ Қайта көріңіз';
+        const suggestions = (data.suggestions || [])
+            .map(s => `<li>${s}</li>`).join('');
+
+        showResult(`
+            <div class="score-badge ${scoreClass}">
+                ${status} - ${data.score}/100
+            </div>
+            <div class="feedback">${data.feedback}</div>
+            ${data.execution_result ? `
+                <h4 style="margin-bottom:0.5rem; color:#93c5fd">
+                    Бағдарлама нәтижесі:
+                </h4>
+                <div class="output-box">${data.execution_result}</div>
+            ` : ''}
+            ${suggestions ? `
+                <h4 style="margin-bottom:0.5rem; color:#93c5fd">Кеңестер:</h4>
+                <ul class="suggestions">${suggestions}</ul>
+            ` : ''}
+            ${data.is_correct ? `
+                <div class="success-msg" style="margin-top:1rem">
+                    🎉 Тамаша жұмыс! Келесі сабаққа өтуге болады.
+                </div>
+            ` : ''}
+        `);
+
+    } catch (err) {
+        showResult(`<div class="error-msg">❌ ${err.message}</div>`);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '✅ Шешімді тексеру';
+    }
+}
+
+async function getHint() {
+    const code = document.getElementById('lesson-code').value.trim();
+    showResult('<div class="loader">⏳ AI кеңес ойлауда...</div>');
+
+    try {
+        const res = await fetch('/chat/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: `Задание: ${LESSON_TASK}\n\nМой код:\n${code || '(пустой)'}\n\nДай подсказку но НЕ пиши готовый ответ!`,
+                history: []
+            })
+        });
+        const data = await res.json();
+        showResult(`
+            <h4 style="color:#fbbf24; margin-bottom:0.5rem">
+                💡 AI кеңесі:
+            </h4>
+            <div class="feedback">${data.response.replace(/\n/g, '<br>')}</div>
+        `);
+    } catch (err) {
+        showResult(`<div class="error-msg">❌ ${err.message}</div>`);
+    }
+}
+
+function showResult(html) {
+    const s = document.getElementById('result-section');
+    s.style.display = 'block';
+    document.getElementById('result-content').innerHTML = html;
+    s.scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+{% endblock %}

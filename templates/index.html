@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Практика — Bilim Al{% endblock %}
+{% block page_title %}Практика{% endblock %}
+
+{% block content %}
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem">
+
+    <!-- Тапсырма генераторы -->
+    <div class="card">
+        <div class="card-title">Тапсырма генераторы</div>
+        <div class="form-group">
+            <label class="form-label">Тақырып</label>
+            <select id="topic">
+                <option value="циклы for">for циклдары</option>
+                <option value="циклы while">while циклдары</option>
+                <option value="функции">Функциялар</option>
+                <option value="списки">Тізімдер</option>
+                <option value="словари">Сөздіктер</option>
+                <option value="классы и ООП">Кластар және ООП</option>
+                <option value="файлы">Файлдар</option>
+                <option value="обработка ошибок">Қателерді өңдеу</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Күрделілік</label>
+            <select id="difficulty">
+                <option value="beginner">Бастапқы</option>
+                <option value="intermediate">Орташа</option>
+                <option value="advanced">Жоғары</option>
+            </select>
+        </div>
+        <button class="btn btn-primary" id="gen-btn" onclick="generateTask()">
+            ✨ Генерациялау
+        </button>
+    </div>
+
+    <!-- Тапсырма -->
+    <div class="card" id="task-section" style="display:none">
+        <div class="card-title">Тапсырма</div>
+        <div id="task-content"></div>
+    </div>
+
+</div>
+
+<!-- Редактор -->
+<div class="card">
+    <div class="card-title">Код редакторы</div>
+    <textarea id="student-code" class="code-editor"
+        placeholder="# Кодыңызды осында жазыңыз..."
+        rows="14"></textarea>
+    <div class="btn-group mt-4">
+        <button class="btn btn-primary" onclick="checkCode()">
+            ✅ Кодты тексеру
+        </button>
+        <button class="btn btn-secondary" onclick="explainError()">
+            🔍 Қатені түсіндіру
+        </button>
+    </div>
+</div>
+
+<!-- Нәтиже -->
+<div class="card" id="result-section" style="display:none">
+    <div class="card-title">Нәтиже</div>
+    <div id="result-content"></div>
+</div>
+
+{% endblock %}

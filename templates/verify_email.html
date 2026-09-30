@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Email растау — Bilim Al{% endblock %}
+
+{% block auth_content %}
+<div class="auth-page">
+    <div class="auth-card">
+
+        <div style="margin-bottom:24px; text-align:center">
+            <div style="font-size:48px; margin-bottom:12px">📧</div>
+            <div class="auth-title">Email растаңыз</div>
+            <div class="auth-sub" style="color:var(--text-muted); font-size:13.5px; margin-top:4px">
+                Біз <strong id="email-display"></strong> мекенжайына 6 таңбалы код жібердік
+            </div>
+        </div>
+
+        <div id="verify-error" class="alert alert-error hidden"></div>
+        <div id="verify-success" class="alert alert-success hidden"></div>
+
+        <div class="form-group">
+            <label class="form-label">Растау коды</label>
+            <input type="text" id="verify-code"
+                   placeholder="000000"
+                   maxlength="6"
+                   style="letter-spacing:6px; font-size:22px;
+                          text-align:center; font-family:var(--font-mono)">
+        </div>
+
+        <button class="btn btn-primary btn-full" onclick="verifyEmail()">
+            Email растау
+        </button>
+
+        <div style="text-align:center; margin-top:16px">
+            <button onclick="resendCode()"
+                    style="background:none; border:none; color:var(--accent);
+                           font-size:13px; cursor:pointer; font-family:inherit">
+                Кодты қайта жіберу
+            </button>
+        </div>
+
+        <div class="auth-footer">
+            <a href="/login">← Кіру бетіне оралу</a>
+        </div>
+    </div>
+</div>
+
+<script>
+// URL параметрлерінен деректер алу
+const params = new URLSearchParams(window.location.search);
+const username = params.get('username') || '';
+const email = params.get('email') || '';
+
+document.getElementById('email-display').textContent = email;
+
+async function verifyEmail() {
+    const code = document.getElementById('verify-code').value.trim();
+    if (code.length !== 6) {
+        showErr('6 таңбалы кодты енгізіңіз'); return;
+    }
+
+    try {
+        const res = await fetch(`/auth/verify-email?username=${username}&code=${code}`, {
+            method: 'POST'
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail);
+
+        const s = document.getElementById('verify-success');
+        s.classList.remove('hidden');
+        s.textContent = '✅ Email расталды! Кіру бетіне өтудеміз...';
+
+        setTimeout(() => window.location.href = '/login', 2000);
+
+    } catch (e) {
+        showErr(e.message);
+    }
+}
+
+async function resendCode() {
+    try {
+        const res = await fetch('/auth/resend-verification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail);
+
+        const s = document.getElementById('verify-success');
+        s.classList.remove('hidden');
+        s.textContent = '📧 Код қайта жіберілді!';
+
+    } catch (e) {
+        showErr(e.message);
+    }
+}
+
+function showErr(msg) {
+    const el = document.getElementById('verify-error');
+    el.classList.remove('hidden');
+    el.textContent = msg;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Тест нәтижесі — Bilim Al{% endblock %}
+{% block page_title %}Тест нәтижесі{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <section class="card" style="text-align:center; padding:2rem">
+        <div style="font-size:4rem; margin-bottom:1rem">
+            {{ recommendations.emoji }}
+        </div>
+        <h2 style="font-size:1.5rem; margin-bottom:0.5rem">
+            {{ recommendations.title }}
+        </h2>
+        <p style="color:#94a3b8; margin-bottom:1.5rem">
+            {{ recommendations.description }}
+        </p>
+        <div class="stat-box" style="display:inline-block; padding:1rem 2rem">
+            <div class="stat-number">{{ result.score }}%</div>
+            <div class="stat-label">Дұрыс жауаптар</div>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>📚 Ұсынылатын курстар</h2>
+        <div style="display:flex; flex-direction:column; gap:0.5rem; margin-top:0.5rem">
+            {% for course in recommendations.courses %}
+            <div class="lesson-item" style="pointer-events:none">
+                <div class="lesson-left">
+                    <span class="lesson-num">{{ loop.index }}</span>
+                    <span class="lesson-title">{{ course }}</span>
+                </div>
+                <span style="color:#3b82f6">→</span>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>💡 Сізге арналған кеңестер</h2>
+        <ul style="padding-left:1.2rem; display:flex; flex-direction:column; gap:0.5rem">
+            {% for tip in recommendations.tips %}
+            <li style="color:#94a3b8; line-height:1.6">{{ tip }}</li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <div style="display:flex; gap:1rem; flex-wrap:wrap">
+        <a href="/" class="btn-primary" style="margin-top:0">
+            📚 Оқуды бастау →
+        </a>
+        <form action="/quiz/reset" method="post" style="margin:0">
+            <button type="submit" class="btn-secondary" style="margin-top:0">
+                🔄 Тестті қайта тапсыру
+            </button>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

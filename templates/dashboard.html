@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Бақылау тақтасы — Bilim Al{% endblock %}
+{% block page_title %}Менің прогресім{% endblock %}
+
+{% block content %}
+
+<!-- Статистика -->
+<div class="stats-grid mb-6">
+    <div class="stat-card">
+        <div class="stat-icon blue">📝</div>
+        <div class="stat-value">{{ total }}</div>
+        <div class="stat-label">Барлық әрекет</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green">✅</div>
+        <div class="stat-value">{{ correct }}</div>
+        <div class="stat-label">Дұрыс шешілген</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon amber">⭐</div>
+        <div class="stat-value">{{ avg_score }}</div>
+        <div class="stat-label">Орташа балл</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon blue">📚</div>
+        <div class="stat-value">{{ topics|length }}</div>
+        <div class="stat-label">Меңгерілген тақырып</div>
+    </div>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem">
+
+    <!-- Тақырыптар -->
+    <div class="card">
+        <div class="card-title">📌 Меңгерілген тақырыптар</div>
+        {% if topics %}
+        <div style="display:flex; flex-wrap:wrap; gap:0.5rem">
+            {% for topic in topics %}
+            <span class="badge badge-blue">{{ topic }}</span>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state" style="padding:2rem">
+            <div class="empty-state-desc">Әзірге деректер жоқ</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Профиль -->
+    <div class="card">
+        <div class="card-title">👤 Профиль</div>
+        <div style="display:flex; flex-direction:column; gap:0.8rem">
+            <div style="display:flex; justify-content:space-between; font-size:13.5px">
+                <span class="text-muted">Аты-жөні</span>
+                <strong>{{ user.full_name or user.username }}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:13.5px">
+                <span class="text-muted">Логин</span>
+                <strong>@{{ user.username }}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:13.5px">
+                <span class="text-muted">Деңгей</span>
+                <span class="badge badge-blue">{{ user.level | capitalize }}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:13.5px">
+                <span class="text-muted">Тіркелген күні</span>
+                <strong>{{ user.created_at.strftime('%d.%m.%Y') }}</strong>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Соңғы әрекеттер -->
+<div class="card mt-4">
+    <div class="card-title">🕐 Соңғы әрекеттер</div>
+    {% if attempts %}
+    <div class="table-wrap">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Тапсырма</th>
+                    <th>Тақырып</th>
+                    <th>Күрделілік</th>
+                    <th>Балл</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in attempts %}
+                <tr>
+                    <td style="font-weight:500">{{ a.task_title }}</td>
+                    <td><span class="badge badge-gray">{{ a.topic }}</span></td>
+                    <td><span class="badge badge-blue">{{ a.difficulty }}</span></td>
+                    <td>
+                        <span class="badge
+                            {% if a.score >= 80 %}badge-green
+                            {% elif a.score >= 50 %}badge-amber
+                            {% else %}badge-red{% endif %}">
+                            {{ a.score|int }}/100
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">📝</div>
+        <div class="empty-state-title">Әрекеттер жоқ</div>
+        <div class="empty-state-desc">Статистиканы көру үшін алғашқы тапсырманы шешіңіз</div>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

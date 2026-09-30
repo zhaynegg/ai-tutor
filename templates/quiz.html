@@ -1,0 +1,517 @@
+{% extends "base.html" %}
+{% block title %}Диагностикалық тест — Bilim Al{% endblock %}
+{% block page_title %}Диагностикалық тест{% endblock %}
+
+{% block content %}
+
+<style>
+/* ── QUIZ DESIGN SYSTEM ── */
+.quiz-wrap {
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.quiz-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.quiz-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+}
+
+.quiz-subtitle {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+}
+
+.quiz-progress-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    box-shadow: var(--shadow-xs);
+}
+
+.quiz-progress-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.quiz-progress-label {
+    color: var(--text-muted);
+}
+
+.quiz-progress-count {
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.quiz-progress-bar {
+    height: 6px;
+    background: var(--surface-2);
+    border-radius: 100px;
+    overflow: hidden;
+}
+
+.quiz-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--blue-500), var(--blue-400));
+    border-radius: 100px;
+    transition: width 0.4s ease;
+}
+
+/* ── QUESTION CARD ── */
+.question-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: var(--shadow-sm);
+    margin-top: 16px;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.q-meta {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.q-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.q-badge.theory   { background: #eff6ff; color: #2563eb; }
+.q-badge.code     { background: #f5f3ff; color: #7c3aed; }
+.q-badge.practice { background: #ecfdf5; color: #059669; }
+
+.q-badge.beginner     { background: #f0fdf4; color: #16a34a; }
+.q-badge.intermediate { background: #fffbeb; color: #d97706; }
+.q-badge.advanced     { background: #fef2f2; color: #dc2626; }
+
+[data-theme="dark"] .q-badge.theory   { background: #1e3a5f; color: #93c5fd; }
+[data-theme="dark"] .q-badge.code     { background: #2e1a47; color: #c4b5fd; }
+[data-theme="dark"] .q-badge.practice { background: #064e3b; color: #6ee7b7; }
+[data-theme="dark"] .q-badge.beginner     { background: #064e3b; color: #6ee7b7; }
+[data-theme="dark"] .q-badge.intermediate { background: #422006; color: #fbbf24; }
+[data-theme="dark"] .q-badge.advanced     { background: #450a0a; color: #fca5a5; }
+
+.q-text {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.6;
+    margin-bottom: 24px;
+    white-space: pre-wrap;
+}
+
+.q-text.code-question {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    background: #0d1117;
+    color: #e6edf3;
+    padding: 16px 20px;
+    border-radius: 12px;
+    border: 1px solid #21262d;
+    font-weight: 400;
+    line-height: 1.7;
+}
+
+/* ── OPTIONS ── */
+.options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.option-btn {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 16px 18px;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    font-family: var(--font-sans);
+    font-size: 14.5px;
+    font-weight: 500;
+    color: var(--text-primary);
+    text-align: left;
+    line-height: 1.5;
+    position: relative;
+}
+
+.option-btn:hover {
+    border-color: var(--blue-300);
+    background: #f8fafc;
+    transform: translateX(2px);
+}
+
+[data-theme="dark"] .option-btn:hover {
+    background: #1a2235;
+}
+
+.option-btn.selected {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    color: var(--blue-700);
+    transform: translateX(4px);
+}
+
+[data-theme="dark"] .option-btn.selected {
+    background: linear-gradient(135deg, #1e3a5f 0%, #1a2f4a 100%);
+    color: #93c5fd;
+}
+
+.option-letter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: var(--surface-2);
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    transition: all 0.18s ease;
+}
+
+.option-btn:hover .option-letter {
+    border-color: var(--blue-400);
+    color: var(--blue-600);
+}
+
+.option-btn.selected .option-letter {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+.option-text {
+    flex: 1;
+}
+
+.option-check {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.18s ease;
+    opacity: 0;
+}
+
+.option-btn.selected .option-check {
+    opacity: 1;
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+}
+
+.option-btn.selected .option-check::after {
+    content: '✓';
+    font-size: 14px;
+    font-weight: 700;
+}
+
+/* ── NAVIGATION ── */
+.q-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+}
+
+.btn-quiz {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    border: 1px solid transparent;
+    font-family: var(--font-sans);
+}
+
+.btn-quiz-back {
+    background: var(--surface);
+    color: var(--text-secondary);
+    border-color: var(--border);
+}
+.btn-quiz-back:hover {
+    background: var(--surface-2);
+    color: var(--text-primary);
+}
+
+.btn-quiz-next {
+    background: var(--accent);
+    color: white;
+}
+.btn-quiz-next:hover:not(:disabled) {
+    background: var(--blue-700);
+    transform: translateX(2px);
+}
+.btn-quiz-next:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.btn-quiz-finish {
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    color: white;
+}
+.btn-quiz-finish:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+}
+.btn-quiz-finish:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* ── LOADING ── */
+.loading-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 60px 28px;
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+}
+
+.loading-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    animation: pulse 1.5s ease infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50%      { transform: scale(1.1); opacity: 0.7; }
+}
+
+.loading-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.loading-text {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+</style>
+
+<div class="quiz-wrap">
+
+    <!-- Header -->
+    <div class="quiz-header">
+        <div class="quiz-title">🧠 Диагностикалық тест</div>
+        <div class="quiz-subtitle">
+            {{ total }} сұраққа жауап беріңіз - жүйе сіздің деңгейіңізді анықтап,
+            қолайлы курстарды таңдайды
+        </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="quiz-progress-wrap">
+        <div class="quiz-progress-top">
+            <span class="quiz-progress-label">Прогресс</span>
+            <span class="quiz-progress-count">
+                <span id="current-q">1</span> / {{ total }}
+            </span>
+        </div>
+        <div class="quiz-progress-bar">
+            <div class="quiz-progress-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+    </div>
+
+    <!-- Questions -->
+    {% for q in questions %}
+    <div class="question-card"
+         id="question-{{ q.id }}"
+         style="display:{% if loop.first %}block{% else %}none{% endif %}">
+
+        <div class="q-meta">
+            <span class="q-badge
+                {% if q.type == 'choice' %}theory
+                {% elif q.type == 'code_read' %}code
+                {% else %}practice{% endif %}">
+                {% if q.type == 'choice' %}📝 Теория
+                {% elif q.type == 'code_read' %}💻 Кодты оқу
+                {% else %}✏️ Практика{% endif %}
+            </span>
+            <span class="q-badge
+                {% if q.level == 'beginner' %}beginner
+                {% elif q.level == 'intermediate' %}intermediate
+                {% else %}advanced{% endif %}">
+                {% if q.level == 'beginner' %}🟢 Бастапқы
+                {% elif q.level == 'intermediate' %}🟡 Орташа
+                {% else %}🔴 Жоғары{% endif %}
+            </span>
+        </div>
+
+        <div class="q-text {% if q.type == 'code_read' %}code-question{% endif %}">{{ q.question }}</div>
+
+        <div class="options-list">
+            {% for option in q.options %}
+            <button class="option-btn"
+                    onclick="selectAnswer({{ q.id }}, {{ loop.index0 }}, this)">
+                <span class="option-letter">{{ ['A','B','C','D'][loop.index0] }}</span>
+                <span class="option-text">{{ option }}</span>
+                <span class="option-check"></span>
+            </button>
+            {% endfor %}
+        </div>
+
+        <div class="q-nav">
+            {% if not loop.first %}
+            <button class="btn-quiz btn-quiz-back"
+                    onclick="prevQuestion({{ q.id }})">
+                ← Артқа
+            </button>
+            {% else %}
+            <div></div>
+            {% endif %}
+
+            {% if not loop.last %}
+            <button class="btn-quiz btn-quiz-next"
+                    id="next-{{ q.id }}"
+                    onclick="nextQuestion({{ q.id }}, {{ questions[loop.index].id if not loop.last else 0 }})"
+                    disabled>
+                Келесі →
+            </button>
+            {% else %}
+            <button class="btn-quiz btn-quiz-finish"
+                    id="next-{{ q.id }}"
+                    onclick="submitQuiz()"
+                    disabled>
+                ✅ Тестті аяқтау
+            </button>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Loading -->
+    <div class="loading-card" id="loading-section" style="display:none">
+        <div class="loading-icon">🧠</div>
+        <div class="loading-title">AI сіздің жауаптарыңызды талдауда...</div>
+        <div class="loading-text">Деңгейіңізді анықтап, курстарды таңдаудамыз</div>
+    </div>
+
+</div>
+
+<script>
+const answers = {};
+const total = {{ total }};
+
+function selectAnswer(questionId, answerIndex, btn) {
+    const card = document.getElementById('question-' + questionId);
+    card.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+
+    btn.classList.add('selected');
+    answers[questionId] = answerIndex;
+
+    const nextBtn = document.getElementById('next-' + questionId);
+    if (nextBtn) nextBtn.disabled = false;
+
+    updateProgress();
+}
+
+function nextQuestion(currentId, nextId) {
+    document.getElementById('question-' + currentId).style.display = 'none';
+    document.getElementById('question-' + nextId).style.display = 'block';
+    document.getElementById('current-q').textContent =
+        Object.keys(answers).length + 1;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function prevQuestion(currentId) {
+    const cards = document.querySelectorAll('.question-card');
+    let prevId = null;
+    for (let i = 0; i < cards.length; i++) {
+        if (cards[i].id === 'question-' + currentId && i > 0) {
+            prevId = cards[i-1].id.replace('question-', '');
+            break;
+        }
+    }
+    if (prevId) {
+        document.getElementById('question-' + currentId).style.display = 'none';
+        document.getElementById('question-' + prevId).style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+
+function updateProgress() {
+    const answered = Object.keys(answers).length;
+    const pct = (answered / total) * 100;
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('current-q').textContent = Math.min(answered + 1, total);
+}
+
+async function submitQuiz() {
+    if (Object.keys(answers).length < total) {
+        alert('Барлық сұрақтарға жауап беріңіз!');
+        return;
+    }
+
+    document.querySelectorAll('.question-card').forEach(c => c.style.display = 'none');
+    document.querySelector('.quiz-progress-wrap').style.display = 'none';
+    document.getElementById('loading-section').style.display = 'block';
+
+    try {
+        const res = await fetch('/quiz/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ answers })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            window.location.href = '/quiz/result';
+        }
+    } catch (err) {
+        alert('Қате: ' + err.message);
+    }
+}
+</script>
+
+{% endblock %}

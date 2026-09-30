@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{{ course.title }} — Bilim Al{% endblock %}
+{% block page_title %}{{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <section class="card">
+        <div style="display:flex; align-items:center; gap:1rem">
+            <span style="font-size:3rem">{{ course.icon }}</span>
+            <div>
+                <h2>{{ course.title }}</h2>
+                <p style="color:#94a3b8; margin-top:0.3rem">
+                    {{ course.description }}
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>📋 Сабақтар</h2>
+        <div class="lessons-list">
+            {% for item in lessons %}
+            <a href="/courses/{{ course.id }}/lessons/{{ item.lesson.id }}"
+               class="lesson-item {% if item.is_done %}lesson-done{% endif %}">
+                <div class="lesson-left">
+                    <span class="lesson-num">{{ loop.index }}</span>
+                    <div>
+                        <div class="lesson-title">{{ item.lesson.title }}</div>
+                        {% if item.is_done %}
+                        <div style="color:#86efac; font-size:0.8rem">
+                            ✅ Өтілді • {{ item.score|int }}/100
+                        </div>
+                        {% else %}
+                        <div style="color:#94a3b8; font-size:0.8rem">
+                            Өтілмеген
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <span class="lesson-arrow">→</span>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+
+    <a href="/courses" class="btn-secondary" style="display:inline-block">
+        ← Барлық курстар
+    </a>
+
+</div>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Пайдаланушылар — Админ{% endblock %}
+{% block page_title %}Пайдаланушылар{% endblock %}
+
+{% block content %}
+
+<div class="flex items-center justify-between mb-6">
+    <div class="text-muted text-sm">Барлығы: {{ users_data|length }} пайдаланушы</div>
+    <a href="/admin" class="btn btn-secondary btn-sm">← Артқа</a>
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Пайдаланушы</th>
+                    <th>Email</th>
+                    <th>Деңгей</th>
+                    <th>Әрекеттер</th>
+                    <th>Дұрыс</th>
+                    <th>Расталған</th>
+                    <th>Рөл</th>
+                    <th>Әрекет</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in users_data %}
+                <tr id="user-row-{{ item.user.id }}">
+                    <td class="text-muted text-sm">{{ item.user.id }}</td>
+                    <td>
+                        <div style="font-weight:600">{{ item.user.username }}</div>
+                        <div class="text-muted text-sm">{{ item.user.full_name or '—' }}</div>
+                    </td>
+                    <td class="text-muted text-sm">{{ item.user.email }}</td>
+                    <td>
+                        <span class="badge
+                            {% if item.user.level == 'advanced' %}badge-green
+                            {% elif item.user.level == 'intermediate' %}badge-amber
+                            {% else %}badge-blue{% endif %}">
+                            {{ item.user.level }}
+                        </span>
+                    </td>
+                    <td>{{ item.attempts }}</td>
+                    <td>{{ item.correct }}</td>
+                    <td>
+                        {% if item.user.is_verified %}
+                        <span class="badge badge-green">✓</span>
+                        {% else %}
+                        <span class="badge badge-red">✗</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if item.user.is_admin %}
+                        <span class="badge badge-red">Админ</span>
+                        {% else %}
+                        <span class="badge badge-gray">Студент</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="flex gap-2">
+                            <button onclick="toggleAdmin({{ item.user.id }})"
+                                    class="btn btn-secondary btn-xs">
+                                {% if item.user.is_admin %}Шеттету{% else %}Админ ету{% endif %}
+                            </button>
+                            <button onclick="deleteUser({{ item.user.id }})"
+                                    class="btn btn-danger btn-xs">
+                                Жою
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+async function toggleAdmin(userId) {
+    if (!confirm('Админ құқықтарын өзгерту керек пе?')) return;
+    const res = await fetch(`/admin/users/${userId}/toggle_admin`, { method: 'POST' });
+    if (res.ok) location.reload();
+}
+
+async function deleteUser(userId) {
+    if (!confirm('Пайдаланушыны жою керек пе? Барлық деректері жойылады!')) return;
+    const res = await fetch(`/admin/users/${userId}/delete`, { method: 'POST' });
+    if (res.ok) document.getElementById('user-row-' + userId).remove();
+}
+</script>
+{% endblock %}
