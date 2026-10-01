@@ -12,7 +12,7 @@ python -m uvicorn main:app --reload
 
 Повторный запуск: `./start.sh`. Проверки: `.venv/bin/python -m unittest discover -s tests -v`.
 
-Откройте http://localhost:8000. Для AI нужен GROQ_API_KEY. Для регистрации нужна почта: локально можно использовать SMTP, на Render — BREVO_API_KEY или RESEND_API_KEY и MAIL_FROM. Адрес отправителя нужно подтвердить в выбранном сервисе. Тестовый отправитель Resend ограничен адресом владельца аккаунта.
+Откройте http://localhost:8000. Для AI нужен GROQ_API_KEY. Для регистрации нужна почта. Рекомендуемая настройка на Render — EmailJS с подключённым Gmail: EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID и EMAILJS_PUBLIC_KEY. Альтернативы — Brevo или Resend через HTTPS, а локально доступен SMTP. Тестовый отправитель Resend ограничен адресом владельца аккаунта.
 
 SQLite создаётся автоматически в папке проекта. Копия начинается с новой базой: старые пользователи не перенесены. Курсы создаются при первом запуске.
 
@@ -24,11 +24,44 @@ SQLite создаётся автоматически в папке проект�
 - Start: `uvicorn main:app --host 0.0.0.0 --port $PORT`
 - Health check: `/health`
 
-Переменные: DATABASE_URL (PostgreSQL), SECRET_KEY (случайная длинная строка; Blueprint создаёт автоматически), GROQ_API_KEY, MAIL_FROM и один почтовый ключ: BREVO_API_KEY или RESEND_API_KEY.
+Переменные: DATABASE_URL (PostgreSQL), SECRET_KEY (случайная длинная строка; Blueprint создаёт автоматически), GROQ_API_KEY и три настройки EmailJS, перечисленные ниже. render.yaml запрашивает эти обязательные настройки; дополнительные почтовые ключи можно добавить вручную в Render → Environment.
 
 Blueprint создаёт только бесплатный Web Service. PostgreSQL подключается отдельно через DATABASE_URL: используйте постоянную базу Render или внешнего провайдера. Бесплатная база Render истекает через 30 дней. Без PostgreSQL приложение на Render намеренно не запускается, чтобы не терять аккаунты в SQLite.
 
-Почта отправляется через HTTPS Brevo или Resend, поскольку бесплатный Render блокирует SMTP. Если заданы оба ключа, используется Brevo. Ошибка выбранного сервиса возвращает ошибку регистрации; автоматического переключения между сервисами нет. Секреты и локальная база исключены из Git.
+Почта отправляется через HTTPS EmailJS, Brevo или Resend, поскольку бесплатный Render блокирует SMTP. Порядок выбора: EmailJS → Brevo → Resend → локальный SMTP. Если задана хотя бы одна настройка EMAILJS_*, приложение выбирает EmailJS и требует все три обязательных значения; неполная настройка не переключает отправку на старый сервис. Ошибка выбранного сервиса возвращает ошибку регистрации; автоматического переключения между сервисами нет. Секреты и локальная база исключены из Git.
+
+### EmailJS + Gmail: подключение к Render
+
+Один шаблон обслуживает регистрацию и восстановление пароля. Код генерируется и проверяется на сервере. Адрес получателя берётся из регистрации или запроса восстановления; вручную добавлять каждого пользователя в EmailJS не нужно.
+
+1. В EmailJS → Email Services добавьте Gmail, подключите аккаунт и отправьте тестовое письмо. Скопируйте Service ID: [настройка сервиса](https://www.emailjs.com/docs/tutorial/adding-email-service/).
+2. В Email Templates создайте один шаблон. Заполните поля:
+
+   | Поле EmailJS | Значение |
+   | --- | --- |
+   | To Email | `{{to_email}}` |
+   | Subject | `{{subject}}` |
+   | From Name | `Bilim Al` |
+   | From Email | Включите использование адреса по умолчанию из подключённого Gmail |
+   | Reply-To | Подключённый адрес Gmail или пустое поле |
+   | CC / BCC | Пустые поля |
+
+   В редактор HTML вставьте содержимое `templates/email/emailjs_code.html`. Используйте двойные фигурные скобки: EmailJS экранирует значения сам. Сохраните шаблон и скопируйте Template ID: [поля шаблона](https://www.emailjs.com/docs/tutorial/creating-email-template/), [переменные](https://www.emailjs.com/docs/user-guide/dynamic-variables-templates/).
+3. В разделе Account скопируйте Public Key. В Account → Security включите **Allow API requests from non-browser applications**: Python-сервер на Render отправляет запросы без браузера. Если включена авторизация приватным ключом, скопируйте также Private Key: [официальная инструкция для серверных запросов](https://github.com/emailjs-com/emailjs-nodejs).
+4. Отправьте обновлённые файлы в ветку GitHub, подключённую к вашему Render Web Service. В Render → ваш сервис → Environment добавьте:
+
+   | Переменная Render | Откуда взять значение |
+   | --- | --- |
+   | EMAILJS_SERVICE_ID | EmailJS → Email Services → ваш Gmail-сервис |
+   | EMAILJS_TEMPLATE_ID | EmailJS → Email Templates → созданный шаблон |
+   | EMAILJS_PUBLIC_KEY | EmailJS → Account → Public Key |
+   | EMAILJS_PRIVATE_KEY | Необязательно; нужен, если включена авторизация приватным ключом |
+
+   Для EmailJS поле MAIL_FROM не требуется: отправителем служит подключённый Gmail. Старые значения Brevo/Resend не мешают, когда все настройки EmailJS заполнены. DATABASE_URL, SECRET_KEY и GROQ_API_KEY продолжают использоваться.
+5. Сохраните переменные с **Save, rebuild, and deploy**. Если новый код ещё не развернулся, выберите **Manual Deploy → Deploy latest commit**. Эти изменения должны присутствовать в подключённой ветке: [переменные Render](https://render.com/docs/configure-environment-variables), [развёртывание](https://render.com/docs/deploys).
+6. Проверьте регистрацию с доступным другим адресом, подтвердите код из письма и проверьте восстановление пароля. Для теста шаблона в EmailJS передайте `to_email`, `subject`, `username`, `code`, `title`, `message`, `expires_minutes`.
+
+Логи ошибок показывают почтовый хост и HTTP-статус без ключей и кодов. Если видите `provider=api.emailjs.com status=403`, проверьте доступ для серверных запросов, ключи и настройки Security в EmailJS. Статус 429 может означать ограничение запросов или квоты; проверьте историю EmailJS. Бесплатный тариф включает 200 запросов в месяц, API ограничен одним запросом в секунду: [тарифы](https://www.emailjs.com/pricing/), [API](https://www.emailjs.com/docs/rest-api/send/).
 
 ### Коды подтверждения без своего домена через Brevo
 

@@ -21,6 +21,10 @@ class Settings:
     MAIL_FROM = os.getenv("MAIL_FROM") or MAIL_USERNAME
     MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.gmail.com")
     MAIL_PORT = int(os.getenv("MAIL_PORT", "587"))
+    EMAILJS_SERVICE_ID = os.getenv("EMAILJS_SERVICE_ID", "")
+    EMAILJS_TEMPLATE_ID = os.getenv("EMAILJS_TEMPLATE_ID", "")
+    EMAILJS_PUBLIC_KEY = os.getenv("EMAILJS_PUBLIC_KEY", "")
+    EMAILJS_PRIVATE_KEY = os.getenv("EMAILJS_PRIVATE_KEY", "")
     BREVO_API_KEY = os.getenv("BREVO_API_KEY", "")
     RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
     ENABLE_CODE_EXECUTION = os.getenv("ENABLE_CODE_EXECUTION", "false").lower() == "true"

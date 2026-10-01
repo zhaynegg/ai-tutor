@@ -17,11 +17,13 @@ services:
         value: openai/gpt-oss-120b
       - key: GROQ_API_KEY
         sync: false
-      - key: BREVO_API_KEY
+      - key: EMAILJS_SERVICE_ID
         sync: false
-      - key: RESEND_API_KEY
+      - key: EMAILJS_TEMPLATE_ID
         sync: false
-      - key: MAIL_FROM
+      - key: EMAILJS_PUBLIC_KEY
         sync: false
+      # Optional EMAILJS_PRIVATE_KEY and alternative email credentials
+      # can be added under Environment in the Render dashboard.
       - key: ENABLE_CODE_EXECUTION
         value: "false"

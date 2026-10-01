@@ -117,7 +117,7 @@ class AppTests(unittest.TestCase):
         response.raise_for_status=lambda:None
         transport=AsyncMock()
         transport.post.return_value=response
-        with patch.object(settings,'BREVO_API_KEY',''), patch.object(settings,'RESEND_API_KEY','test-key'), patch.object(settings,'MAIL_FROM','noreply@example.com'), patch('app.services.mail_service.httpx.AsyncClient') as client:
+        with patch.multiple(settings, EMAILJS_SERVICE_ID='', EMAILJS_TEMPLATE_ID='', EMAILJS_PUBLIC_KEY='', EMAILJS_PRIVATE_KEY=''), patch.object(settings,'BREVO_API_KEY',''), patch.object(settings,'RESEND_API_KEY','test-key'), patch.object(settings,'MAIL_FROM','noreply@example.com'), patch('app.services.mail_service.httpx.AsyncClient') as client:
             client.return_value.__aenter__.return_value=transport
             self.assertTrue(asyncio.run(send_verification_email('student@example.com','123456','<name>')))
         args=transport.post.call_args

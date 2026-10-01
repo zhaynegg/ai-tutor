@@ -10,6 +10,22 @@ from email.utils import parseaddr
 from app.config import settings
 
 
+class EmailConfigurationError(RuntimeError):
+    """Invalid email settings; the message contains field names, never credentials."""
+
+
+def _log_delivery_error(error: Exception) -> None:
+    logger = logging.getLogger(__name__)
+    if isinstance(error, httpx.HTTPStatusError):
+        logger.error("Email delivery failed (%s): provider=%s status=%s",
+                     type(error).__name__, error.request.url.host,
+                     error.response.status_code)
+    elif isinstance(error, EmailConfigurationError):
+        logger.error("Email delivery failed (%s): %s", type(error).__name__, error)
+    else:
+        logger.error("Email delivery failed (%s)", type(error).__name__)
+
+
 def generate_code(length: int = 6) -> str:
     """Генерирует случайный 6-значный код."""
     return ''.join(secrets.choice(string.digits) for _ in range(length))
@@ -20,6 +36,7 @@ async def send_reset_email(to_email: str, code: str, username: str) -> bool:
     Отправляет письмо с кодом восстановления пароля.
     Возвращает True если успешно, False если ошибка.
     """
+    template_username = username
     username = escape(username)
     try:
         # Создаём письмо
@@ -75,16 +92,17 @@ async def send_reset_email(to_email: str, code: str, username: str) -> bool:
         msg.attach(MIMEText(html, "html"))
 
         # Отправляем через настроенный почтовый сервис
-        await deliver_email(msg)
+        await deliver_email(msg, code=code, username=template_username, purpose="reset")
         return True
 
     except Exception as e:
-        logging.getLogger(__name__).error("Email delivery failed (%s)", type(e).__name__)
+        _log_delivery_error(e)
         return False
 
 
 async def send_verification_email(to_email: str, code: str, username: str) -> bool:
     """Отправляет письмо с кодом подтверждения email при регистрации."""
+    template_username = username
     username = escape(username)
     try:
         msg = MIMEMultipart("alternative")
@@ -136,14 +154,52 @@ async def send_verification_email(to_email: str, code: str, username: str) -> bo
 
         msg.attach(MIMEText(html, "html"))
 
-        await deliver_email(msg)
+        await deliver_email(msg, code=code, username=template_username, purpose="verification")
         return True
 
     except Exception as e:
-        logging.getLogger(__name__).error("Email delivery failed (%s)", type(e).__name__)
+        _log_delivery_error(e)
         return False
 
-async def deliver_email(msg):
+async def deliver_email(msg, *, code=None, username="", purpose=None):
+    emailjs_settings = {
+        "EMAILJS_SERVICE_ID": settings.EMAILJS_SERVICE_ID,
+        "EMAILJS_TEMPLATE_ID": settings.EMAILJS_TEMPLATE_ID,
+        "EMAILJS_PUBLIC_KEY": settings.EMAILJS_PUBLIC_KEY,
+    }
+    if any(emailjs_settings.values()) or settings.EMAILJS_PRIVATE_KEY:
+        missing = [name for name, value in emailjs_settings.items() if not value]
+        if missing:
+            raise EmailConfigurationError("Set " + ", ".join(missing) + " for EmailJS")
+        if not code or purpose not in ("verification", "reset"):
+            raise EmailConfigurationError("EmailJS requires a code and email purpose")
+        title, message = (
+            ("Подтверждение email", "Введите этот код, чтобы подтвердить email и завершить регистрацию.")
+            if purpose == "verification" else
+            ("Восстановление пароля", "Введите этот код, чтобы восстановить пароль.")
+        )
+        payload = {
+            "service_id": settings.EMAILJS_SERVICE_ID,
+            "template_id": settings.EMAILJS_TEMPLATE_ID,
+            "user_id": settings.EMAILJS_PUBLIC_KEY,
+            "template_params": {
+                "to_email": msg["To"],
+                "subject": msg["Subject"],
+                "username": username,
+                "code": code,
+                "title": title,
+                "message": message,
+                "expires_minutes": 15,
+            },
+        }
+        if settings.EMAILJS_PRIVATE_KEY:
+            payload["accessToken"] = settings.EMAILJS_PRIVATE_KEY
+        async with httpx.AsyncClient(timeout=20) as client:
+            response = await client.post(
+                "https://api.emailjs.com/api/v1.0/email/send", json=payload,
+            )
+            response.raise_for_status()
+        return
     if settings.BREVO_API_KEY:
         sender_name, sender_email = parseaddr(msg["From"])
         async with httpx.AsyncClient(timeout=20) as client:
@@ -170,9 +226,11 @@ async def deliver_email(msg):
             response.raise_for_status()
         return
     if settings.IS_RENDER:
-        raise RuntimeError("Configure BREVO_API_KEY or RESEND_API_KEY, and MAIL_FROM on Render")
+        raise EmailConfigurationError(
+            "Configure EmailJS, or BREVO_API_KEY/RESEND_API_KEY and MAIL_FROM on Render"
+        )
     if not settings.MAIL_USERNAME or not settings.MAIL_PASSWORD:
-        raise RuntimeError("Configure Brevo, Resend, or SMTP credentials")
+        raise EmailConfigurationError("Configure EmailJS, Brevo, Resend, or SMTP credentials")
     await aiosmtplib.send(
         msg, hostname=settings.MAIL_SERVER, port=settings.MAIL_PORT,
         username=settings.MAIL_USERNAME, password=settings.MAIL_PASSWORD,

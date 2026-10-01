@@ -30,6 +30,10 @@ class MailServiceTests(unittest.IsolatedAsyncioTestCase):
 
         settings_patch = patch.multiple(
             settings,
+            EMAILJS_SERVICE_ID="",
+            EMAILJS_TEMPLATE_ID="",
+            EMAILJS_PUBLIC_KEY="",
+            EMAILJS_PRIVATE_KEY="",
             BREVO_API_KEY="test-brevo-key",
             RESEND_API_KEY="test-resend-key",
             MAIL_FROM="Bilim Al Team <sender@example.com>",
