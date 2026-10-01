@@ -17,6 +17,8 @@ services:
         value: openai/gpt-oss-120b
       - key: GROQ_API_KEY
         sync: false
+      - key: BREVO_API_KEY
+        sync: false
       - key: RESEND_API_KEY
         sync: false
       - key: MAIL_FROM

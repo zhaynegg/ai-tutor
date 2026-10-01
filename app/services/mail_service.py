@@ -6,6 +6,7 @@ from html import escape
 import string
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.utils import parseaddr
 from app.config import settings
 
 
@@ -73,7 +74,7 @@ async def send_reset_email(to_email: str, code: str, username: str) -> bool:
 
         msg.attach(MIMEText(html, "html"))
 
-        # Отправляем через Gmail SMTP
+        # Отправляем через настроенный почтовый сервис
         await deliver_email(msg)
         return True
 
@@ -143,6 +144,20 @@ async def send_verification_email(to_email: str, code: str, username: str) -> bo
         return False
 
 async def deliver_email(msg):
+    if settings.BREVO_API_KEY:
+        sender_name, sender_email = parseaddr(msg["From"])
+        async with httpx.AsyncClient(timeout=20) as client:
+            response = await client.post(
+                "https://api.brevo.com/v3/smtp/email",
+                headers={"api-key": settings.BREVO_API_KEY},
+                json={"sender": {"email": sender_email,
+                                 "name": sender_name or settings.APP_TITLE},
+                      "to": [{"email": msg["To"]}],
+                      "subject": msg["Subject"],
+                      "htmlContent": msg.get_payload()[0].get_payload(decode=True).decode("utf-8")},
+            )
+            response.raise_for_status()
+        return
     if settings.RESEND_API_KEY:
         async with httpx.AsyncClient(timeout=20) as client:
             response = await client.post(
@@ -155,9 +170,9 @@ async def deliver_email(msg):
             response.raise_for_status()
         return
     if settings.IS_RENDER:
-        raise RuntimeError("Configure RESEND_API_KEY and MAIL_FROM on Render")
+        raise RuntimeError("Configure BREVO_API_KEY or RESEND_API_KEY, and MAIL_FROM on Render")
     if not settings.MAIL_USERNAME or not settings.MAIL_PASSWORD:
-        raise RuntimeError("Configure SMTP or Resend credentials")
+        raise RuntimeError("Configure Brevo, Resend, or SMTP credentials")
     await aiosmtplib.send(
         msg, hostname=settings.MAIL_SERVER, port=settings.MAIL_PORT,
         username=settings.MAIL_USERNAME, password=settings.MAIL_PASSWORD,
