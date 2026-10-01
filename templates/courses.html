@@ -9,7 +9,7 @@
         <h1 style="font-size:20px; font-weight:700; margin-bottom:4px">
             Python бойынша курстар
         </h1>
-        <p class="text-muted text-sm">Курсты таңдап, оқуды бастаңыз</p>
+        <p class="text-muted text-sm">{{ courses|length }} курс · {{ courses|sum(attribute='total') }} сабақ. Курсты таңдап, оқуды бастаңыз</p>
     </div>
 </div>
 
@@ -37,6 +37,7 @@
         </div>
 
         <div class="course-meta">
+            <span>{{ {'beginner': 'Бастапқы', 'intermediate': 'Орташа', 'advanced': 'Жоғары'}.get(item.course.difficulty, 'Бастапқы') }}</span>
             <span>📖 {{ item.total }} сабақ</span>
             <span>✅ {{ item.done }} өтілді</span>
             {% if item.percent == 100 %}

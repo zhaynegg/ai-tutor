@@ -43,9 +43,10 @@
             {{ lesson.task }}
         </div>
         {% if lesson.expected_output %}
-        <p class="expected-output">
-            <strong>Күтілетін нәтиже:</strong> {{ lesson.expected_output }}
-        </p>
+        <div class="expected-output">
+            <strong>Күтілетін нәтиже:</strong>
+            <pre class="output-block" style="margin-top:0.5rem; white-space:pre-wrap">{{ lesson.expected_output }}</pre>
+        </div>
         {% endif %}
 
         {% if progress and progress.is_done %}
@@ -97,8 +98,8 @@
 <script>
 const LESSON_ID  = {{ lesson.id }};
 const COURSE_ID  = {{ course_id }};
-const LESSON_TASK = `{{ lesson.task }}`;
-const CODE_EXAMPLE = `{{ lesson.code_example }}`;
+const LESSON_TASK = {{ lesson.task | tojson }};
+const CODE_EXAMPLE = {{ lesson.code_example | tojson }};
 
 function copyToEditor() {
     document.getElementById('lesson-code').value = CODE_EXAMPLE;

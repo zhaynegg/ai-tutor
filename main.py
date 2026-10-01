@@ -11,11 +11,12 @@ from app.models import db_models
 from app.models.db_models import Course, LessonProgress
 from app.routers import tasks, checker, explainer, auth, chat, courses, quiz, admin, password
 from app.services.auth_service import get_current_user
+from app.content.practice_topics import PRACTICE_TOPIC_GROUPS, PRACTICE_TOPIC_COUNT
 
 # Создаём таблицы в БД при старте
 Base.metadata.create_all(bind=engine)
 
-# Заполняем БД готовыми курсами при первом запуске
+# Добавляем новые встроенные курсы и уроки без сброса существующего прогресса
 from app.services.course_service import seed_courses
 _db = SessionLocal()
 try:
@@ -96,7 +97,11 @@ async def coding_page(
     """Страница свободного кодинга с AI."""
     user = get_user(access_token)
     return templates.TemplateResponse(
-        request=request, name="index.html", context={"user": user}
+        request=request, name="index.html", context={
+            "user": user,
+            "topic_groups": PRACTICE_TOPIC_GROUPS,
+            "topic_count": PRACTICE_TOPIC_COUNT,
+        }
     )
 
 

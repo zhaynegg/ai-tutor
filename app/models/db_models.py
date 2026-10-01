@@ -24,6 +24,15 @@ class User(Base):
     is_verified = Column(Boolean, default=False)
 
 
+class CurriculumUpdate(Base):
+    """Records completed content updates without resetting student progress."""
+
+    __tablename__ = "curriculum_updates"
+
+    version = Column(String, primary_key=True)
+    applied_at = Column(DateTime, default=datetime.utcnow)
+
+
 class Course(Base):
     __tablename__ = "courses"
 

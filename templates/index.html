@@ -10,16 +10,15 @@
     <div class="card">
         <div class="card-title">Тапсырма генераторы</div>
         <div class="form-group">
-            <label class="form-label">Тақырып</label>
+            <label class="form-label" for="topic">Тақырып · {{ topic_count }} тақырып</label>
             <select id="topic">
-                <option value="циклы for">for циклдары</option>
-                <option value="циклы while">while циклдары</option>
-                <option value="функции">Функциялар</option>
-                <option value="списки">Тізімдер</option>
-                <option value="словари">Сөздіктер</option>
-                <option value="классы и ООП">Кластар және ООП</option>
-                <option value="файлы">Файлдар</option>
-                <option value="обработка ошибок">Қателерді өңдеу</option>
+                {% for group in topic_groups %}
+                <optgroup label="{{ group.label }}">
+                    {% for value, label in group.topics %}
+                    <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </optgroup>
+                {% endfor %}
             </select>
         </div>
         <div class="form-group">
