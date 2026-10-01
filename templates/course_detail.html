@@ -4,49 +4,39 @@
 
 {% block content %}
 <div class="container">
+    <nav class="breadcrumb" aria-label="Навигация">
+        <a href="/courses">Барлық курстар</a>
+        <span aria-hidden="true">/</span>
+        <span>{{ course.title }}</span>
+    </nav>
 
-    <section class="card">
-        <div style="display:flex; align-items:center; gap:1rem">
-            <span style="font-size:3rem">{{ course.icon }}</span>
-            <div>
-                <h2>{{ course.title }}</h2>
-                <p style="color:#94a3b8; margin-top:0.3rem">
-                    {{ course.description }}
-                </p>
-            </div>
-        </div>
-    </section>
+    <header class="page-heading course-detail-heading">
+        <p class="eyebrow">Оқу курсы · {{ lessons|length }} сабақ</p>
+        <h1>{{ course.title }}</h1>
+        <p class="page-description">{{ course.description }}</p>
+    </header>
 
-    <section class="card">
-        <h2>📋 Сабақтар</h2>
-        <div class="lessons-list">
+    <section class="card" aria-labelledby="lessons-heading">
+        <h2 class="component-title" id="lessons-heading">Курс бағдарламасы</h2>
+        <div class="lesson-list">
             {% for item in lessons %}
             <a href="/courses/{{ course.id }}/lessons/{{ item.lesson.id }}"
-               class="lesson-item {% if item.is_done %}lesson-done{% endif %}">
+               class="lesson-item {% if item.is_done %}done{% endif %}">
                 <div class="lesson-left">
                     <span class="lesson-num">{{ loop.index }}</span>
                     <div>
                         <div class="lesson-title">{{ item.lesson.title }}</div>
                         {% if item.is_done %}
-                        <div style="color:#86efac; font-size:0.8rem">
-                            ✅ Өтілді • {{ item.score|int }}/100
-                        </div>
+                        <div class="lesson-status completed">Өтілді · {{ item.score|int }}/100</div>
                         {% else %}
-                        <div style="color:#94a3b8; font-size:0.8rem">
-                            Өтілмеген
-                        </div>
+                        <div class="lesson-status">Әлі өтілмеген</div>
                         {% endif %}
                     </div>
                 </div>
-                <span class="lesson-arrow">→</span>
+                <span class="lesson-arrow" aria-hidden="true">→</span>
             </a>
             {% endfor %}
         </div>
     </section>
-
-    <a href="/courses" class="btn-secondary" style="display:inline-block">
-        ← Барлық курстар
-    </a>
-
 </div>
 {% endblock %}

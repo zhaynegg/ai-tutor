@@ -3,38 +3,39 @@
 
 {% block auth_content %}
 <div class="auth-page">
-    <div class="auth-card">
-
-        <div style="margin-bottom:24px">
-            <div class="auth-title">Аккаунтқа кіру</div>
-        </div>
-
-        <div id="auth-error" class="alert alert-error hidden"></div>
-
-        <div class="form-group">
-            <label class="form-label">Пайдаланушы аты</label>
-            <input type="text" id="username" placeholder="username">
-        </div>
-        <div class="form-group">
-            <label class="form-label">Құпиясөз</label>
-            <input type="password" id="password" placeholder="••••••••">
-        </div>
-
-        <div style="text-align:right; margin-top:-8px; margin-bottom:16px">
-            <a href="/forgot-password"
-               style="font-size:13px; color:var(--accent); font-weight:500">
-                Құпиясөзді ұмыттыңыз ба?
-            </a>
-        </div>
-
-        <button class="btn btn-primary btn-full" onclick="loginUser()">
-            Кіру
-        </button>
-
-        <div class="auth-footer">
-            Аккаунтыңыз жоқ па? <a href="/register">Тіркелу</a>
-        </div>
-
+    <div class="auth-layout">
+        <section class="auth-intro" aria-labelledby="welcome-heading">
+            <a class="auth-wordmark" href="/"><span class="brand-mark" aria-hidden="true">b.</span>bilim al</a>
+            <p class="auth-eyebrow">Python · қазақ тілінде</p>
+            <h1 class="auth-heading" id="welcome-heading">Оқуға қайта<br>оралайық.</h1>
+            <p class="auth-description">Тоқтаған жеріңізден жалғастырыңыз. Бір сабақ, бір есеп, бір жаңа түсінік.</p>
+            <div class="auth-board">
+                <p class="auth-sticky">Бәрі бір жолдан басталады.</p>
+                <pre class="auth-board-code"><code>print("Сәлем, әлем!")</code></pre>
+            </div>
+        </section>
+        <section class="auth-form-side" aria-labelledby="login-heading">
+            <div class="auth-card">
+                <header class="auth-form-header">
+                    <h2 class="auth-title" id="login-heading">Қош келдіңіз</h2>
+                    <p class="auth-description">Аккаунтыңызға кіріп, сабақты жалғастырыңыз.</p>
+                </header>
+                <div id="auth-error" class="alert alert-error hidden" role="alert"></div>
+                <form onsubmit="event.preventDefault(); loginUser()" novalidate>
+                    <div class="form-group">
+                        <label class="form-label" for="username">Пайдаланушы аты</label>
+                        <input type="text" id="username" name="username" placeholder="Пайдаланушы атыңыз" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="password">Құпиясөз</label>
+                        <input type="password" id="password" name="password" placeholder="Құпиясөзіңіз" autocomplete="current-password" required>
+                    </div>
+                    <div class="auth-link-row"><a href="/forgot-password">Құпиясөзді ұмыттыңыз ба?</a></div>
+                    <button class="btn btn-primary btn-full" type="submit">Кіру</button>
+                </form>
+                <div class="auth-footer">Әлі аккаунтыңыз жоқ па? <a href="/register">Тіркелу</a></div>
+            </div>
+        </section>
     </div>
 </div>
 {% endblock %}

@@ -4,95 +4,75 @@
 
 {% block content %}
 <div class="container">
+    <nav class="breadcrumb" aria-label="Навигация">
+        <a href="/courses">Курстар</a>
+        <span aria-hidden="true">/</span>
+        <a href="/courses/{{ course_id }}">Курс бағдарламасы</a>
+    </nav>
 
-    <!-- Теория -->
-    <section class="card">
-        <h2>📖 {{ lesson.title }}</h2>
-        <div class="theory-content">
-            {{ lesson.theory | safe }}
-        </div>
+    <header class="page-heading">
+        <p class="eyebrow">Сабақ {{ lesson.order }}</p>
+        <h1>{{ lesson.title }}</h1>
+        <p class="page-description">Теорияны оқып, мысалды қарап шығыңыз. Содан кейін өз шешіміңізді жазыңыз.</p>
+    </header>
+
+    <section class="card" aria-labelledby="theory-heading">
+        <h2 class="component-title" id="theory-heading">Түсініп алайық</h2>
+        <div class="theory-content">{{ lesson.theory | safe }}</div>
     </section>
 
-    <!-- Код мысалы -->
     {% if lesson.code_example %}
-    <div class="card mt-4">
-        <div class="card-title">💡 Код мысалы</div>
+    <section class="card mt-4" aria-labelledby="example-heading">
+        <h2 class="component-title" id="example-heading">Код мысалы</h2>
         <div class="code-block">
             <div class="code-header">
-                <div class="code-dots">
-                    <div class="code-dot"></div>
-                    <div class="code-dot"></div>
-                    <div class="code-dot"></div>
-                </div>
-                <span class="code-lang">python</span>
+                <span class="code-lang">Python</span>
                 <button class="code-copy-btn">Көшіру</button>
             </div>
             <div class="code-content">{{ lesson.code_example }}</div>
         </div>
-        <button class="btn btn-secondary btn-sm mt-4"
-                onclick="copyToEditor()">
-            ↓ Редакторға көшіру
-        </button>
-    </div>
+        <button class="btn btn-secondary btn-sm mt-4" onclick="copyToEditor()">Редакторға көшіру</button>
+    </section>
     {% endif %}
 
-    <!-- Тапсырма -->
-    <section class="card">
-        <h2>✏️ Практикалық тапсырма</h2>
-        <div class="task-desc" style="margin-bottom:1rem">
-            {{ lesson.task }}
-        </div>
+    <section class="card" aria-labelledby="task-heading">
+        <h2 class="component-title" id="task-heading">Өзіңіз байқап көріңіз</h2>
+        <p class="task-desc">{{ lesson.task }}</p>
         {% if lesson.expected_output %}
         <div class="expected-output">
             <strong>Күтілетін нәтиже:</strong>
-            <pre class="output-block" style="margin-top:0.5rem; white-space:pre-wrap">{{ lesson.expected_output }}</pre>
+            <pre class="output-block">{{ lesson.expected_output }}</pre>
         </div>
         {% endif %}
 
         {% if progress and progress.is_done %}
-        <div class="success-msg" style="margin-top:1rem">
-            ✅ Тапсырма орындалды! Сіздің балыңыз: {{ progress.score|int }}/100
-        </div>
+        <div class="success-msg">Тапсырма орындалды. Сіздің балыңыз: {{ progress.score|int }}/100</div>
         {% endif %}
     </section>
 
-    <!-- Код редакторы -->
-    <div class="card mt-4">
-        <div class="card-title">💻 Код редакторы</div>
+    <section class="card mt-4" aria-labelledby="editor-heading">
+        <h2 class="component-title" id="editor-heading">Сіздің шешіміңіз</h2>
+        <label class="sr-only" for="lesson-code">Python коды</label>
         <textarea id="lesson-code" class="code-editor"
             placeholder="# Кодыңызды осында жазыңыз..."
-            rows="14"></textarea>
+            rows="14" spellcheck="false"></textarea>
         <div class="btn-group mt-4">
-            <button class="btn btn-primary" id="check-btn"
-                    onclick="checkLessonCode()">
-                ✅ Шешімді тексеру
-            </button>
-            <button class="btn btn-secondary"
-                    onclick="getHint()">
-                💡 AI кеңесі
-            </button>
+            <button class="btn btn-primary" id="check-btn" onclick="checkLessonCode()">Шешімді тексеру</button>
+            <button class="btn btn-secondary" onclick="getHint()">Кеңес алу</button>
         </div>
-    </div>
-
-    <!-- Нәтиже -->
-    <section class="card" id="result-section" style="display:none">
-        <h2>📊 Нәтиже</h2>
-        <div id="result-content"></div>
     </section>
 
-    <!-- Навигация -->
-    <div style="display:flex; justify-content:space-between; margin-top:0.5rem">
-        <a href="/courses/{{ course_id }}" class="btn-secondary">
-            ← Сабақтарға
-        </a>
-        {% if next_lesson %}
-        <a href="/courses/{{ course_id }}/lessons/{{ next_lesson.id }}"
-           class="btn-primary" id="next-btn" style="margin-top:0">
-            Келесі сабақ →
-        </a>
-        {% endif %}
-    </div>
+    <section class="card" id="result-section" style="display:none" aria-labelledby="result-heading">
+        <h2 class="component-title" id="result-heading">Нәтиже</h2>
+        <div id="result-content" aria-live="polite"></div>
+    </section>
 
+    <nav class="lesson-navigation" aria-label="Сабақтар">
+        <a href="/courses/{{ course_id }}" class="btn btn-secondary">← Курс бағдарламасы</a>
+        {% if next_lesson %}
+        <a href="/courses/{{ course_id }}/lessons/{{ next_lesson.id }}" class="btn btn-primary" id="next-btn">Келесі сабақ →</a>
+        {% endif %}
+    </nav>
 </div>
 
 <script>
@@ -111,9 +91,9 @@ async function checkLessonCode() {
 
     const btn = document.getElementById('check-btn');
     btn.disabled = true;
-    btn.textContent = '⏳ Тексерілуде...';
+    btn.textContent = 'Тексерілуде...';
 
-    showResult('<div class="loader">⏳ AI шешімді тексеруде...</div>');
+    showResult('<div class="loader">Шешім тексерілуде...</div>');
 
     try {
         const res = await fetch('/courses/check_lesson', {
@@ -130,7 +110,7 @@ async function checkLessonCode() {
 
         const scoreClass = data.score >= 80 ? 'score-good'
                          : data.score >= 50 ? 'score-mid' : 'score-bad';
-        const status = data.is_correct ? '✅ Дұрыс!' : '❌ Қайта көріңіз';
+        const status = data.is_correct ? 'Дұрыс' : 'Қайта көріңіз';
         const suggestions = (data.suggestions || [])
             .map(s => `<li>${s}</li>`).join('');
 
@@ -140,33 +120,33 @@ async function checkLessonCode() {
             </div>
             <div class="feedback">${data.feedback}</div>
             ${data.execution_result ? `
-                <h4 style="margin-bottom:0.5rem; color:#93c5fd">
+                <h4 class="feedback-heading">
                     Бағдарлама нәтижесі:
                 </h4>
                 <div class="output-box">${data.execution_result}</div>
             ` : ''}
             ${suggestions ? `
-                <h4 style="margin-bottom:0.5rem; color:#93c5fd">Кеңестер:</h4>
+                <h4 class="feedback-heading">Кеңестер:</h4>
                 <ul class="suggestions">${suggestions}</ul>
             ` : ''}
             ${data.is_correct ? `
-                <div class="success-msg" style="margin-top:1rem">
-                    🎉 Тамаша жұмыс! Келесі сабаққа өтуге болады.
+                <div class="success-msg">
+                    Тапсырма орындалды. Келесі сабаққа өтуге болады.
                 </div>
             ` : ''}
         `);
 
     } catch (err) {
-        showResult(`<div class="error-msg">❌ ${err.message}</div>`);
+        showResult(`<div class="error-msg">${err.message}</div>`);
     } finally {
         btn.disabled = false;
-        btn.textContent = '✅ Шешімді тексеру';
+        btn.textContent = 'Шешімді тексеру';
     }
 }
 
 async function getHint() {
     const code = document.getElementById('lesson-code').value.trim();
-    showResult('<div class="loader">⏳ AI кеңес ойлауда...</div>');
+    showResult('<div class="loader">Кеңес дайындалуда...</div>');
 
     try {
         const res = await fetch('/chat/send', {
@@ -179,13 +159,13 @@ async function getHint() {
         });
         const data = await res.json();
         showResult(`
-            <h4 style="color:#fbbf24; margin-bottom:0.5rem">
-                💡 AI кеңесі:
+            <h4 class="feedback-heading">
+                Кеңес:
             </h4>
             <div class="feedback">${data.response.replace(/\n/g, '<br>')}</div>
         `);
     } catch (err) {
-        showResult(`<div class="error-msg">❌ ${err.message}</div>`);
+        showResult(`<div class="error-msg">${err.message}</div>`);
     }
 }
 

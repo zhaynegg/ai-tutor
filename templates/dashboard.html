@@ -1,94 +1,90 @@
 {% extends "base.html" %}
-{% block title %}Бақылау тақтасы — Bilim Al{% endblock %}
+{% block title %}Менің прогресім — Bilim Al{% endblock %}
 {% block page_title %}Менің прогресім{% endblock %}
 
 {% block content %}
+<header class="page-heading">
+    <p class="eyebrow">Оқу күнделігі</p>
+    <h1>Әр шешім — бір қадам алға.</h1>
+    <p class="page-description">Өткен тақырыптарыңыз бен соңғы нәтижелеріңіз осы жерде.</p>
+</header>
 
-<!-- Статистика -->
 <div class="stats-grid mb-6">
     <div class="stat-card">
-        <div class="stat-icon blue">📝</div>
         <div class="stat-value">{{ total }}</div>
         <div class="stat-label">Барлық әрекет</div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon green">✅</div>
         <div class="stat-value">{{ correct }}</div>
         <div class="stat-label">Дұрыс шешілген</div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon amber">⭐</div>
         <div class="stat-value">{{ avg_score }}</div>
         <div class="stat-label">Орташа балл</div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon blue">📚</div>
         <div class="stat-value">{{ topics|length }}</div>
         <div class="stat-label">Меңгерілген тақырып</div>
     </div>
 </div>
 
-<div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem">
-
-    <!-- Тақырыптар -->
-    <div class="card">
-        <div class="card-title">📌 Меңгерілген тақырыптар</div>
+<div class="dashboard-layout">
+    <section class="card" aria-labelledby="topics-heading">
+        <h2 class="component-title" id="topics-heading">Меңгерілген тақырыптар</h2>
         {% if topics %}
-        <div style="display:flex; flex-wrap:wrap; gap:0.5rem">
+        <div class="topic-tags">
             {% for topic in topics %}
             <span class="badge badge-blue">{{ topic }}</span>
             {% endfor %}
         </div>
         {% else %}
-        <div class="empty-state" style="padding:2rem">
-            <div class="empty-state-desc">Әзірге деректер жоқ</div>
+        <div class="empty-state">
+            <p class="empty-state-desc">Алғашқы тапсырманы шешкеннен кейін тақырыптар осында жиналады.</p>
+            <a href="/coding" class="btn btn-secondary">Практикаға өту</a>
         </div>
         {% endif %}
-    </div>
+    </section>
 
-    <!-- Профиль -->
-    <div class="card">
-        <div class="card-title">👤 Профиль</div>
-        <div style="display:flex; flex-direction:column; gap:0.8rem">
-            <div style="display:flex; justify-content:space-between; font-size:13.5px">
-                <span class="text-muted">Аты-жөні</span>
-                <strong>{{ user.full_name or user.username }}</strong>
+    <section class="card" aria-labelledby="profile-heading">
+        <h2 class="component-title" id="profile-heading">Профиль</h2>
+        <dl class="profile-details">
+            <div class="profile-row">
+                <dt>Аты-жөні</dt>
+                <dd>{{ user.full_name or user.username }}</dd>
             </div>
-            <div style="display:flex; justify-content:space-between; font-size:13.5px">
-                <span class="text-muted">Логин</span>
-                <strong>@{{ user.username }}</strong>
+            <div class="profile-row">
+                <dt>Логин</dt>
+                <dd>@{{ user.username }}</dd>
             </div>
-            <div style="display:flex; justify-content:space-between; font-size:13.5px">
-                <span class="text-muted">Деңгей</span>
-                <span class="badge badge-blue">{{ user.level | capitalize }}</span>
+            <div class="profile-row">
+                <dt>Деңгей</dt>
+                <dd><span class="badge badge-blue">{{ user.level | capitalize }}</span></dd>
             </div>
-            <div style="display:flex; justify-content:space-between; font-size:13.5px">
-                <span class="text-muted">Тіркелген күні</span>
-                <strong>{{ user.created_at.strftime('%d.%m.%Y') }}</strong>
+            <div class="profile-row">
+                <dt>Тіркелген күні</dt>
+                <dd>{{ user.created_at.strftime('%d.%m.%Y') }}</dd>
             </div>
-        </div>
-    </div>
-
+        </dl>
+    </section>
 </div>
 
-<!-- Соңғы әрекеттер -->
-<div class="card mt-4">
-    <div class="card-title">🕐 Соңғы әрекеттер</div>
+<section class="card mt-4" aria-labelledby="activity-heading">
+    <h2 class="component-title" id="activity-heading">Соңғы әрекеттер</h2>
     {% if attempts %}
     <div class="table-wrap">
         <table class="table">
             <thead>
                 <tr>
-                    <th>Тапсырма</th>
-                    <th>Тақырып</th>
-                    <th>Күрделілік</th>
-                    <th>Балл</th>
+                    <th scope="col">Тапсырма</th>
+                    <th scope="col">Тақырып</th>
+                    <th scope="col">Күрделілік</th>
+                    <th scope="col">Балл</th>
                 </tr>
             </thead>
             <tbody>
                 {% for a in attempts %}
                 <tr>
-                    <td style="font-weight:500">{{ a.task_title }}</td>
+                    <td class="table-task-title">{{ a.task_title }}</td>
                     <td><span class="badge badge-gray">{{ a.topic }}</span></td>
                     <td><span class="badge badge-blue">{{ a.difficulty }}</span></td>
                     <td>
@@ -106,11 +102,10 @@
     </div>
     {% else %}
     <div class="empty-state">
-        <div class="empty-state-icon">📝</div>
-        <div class="empty-state-title">Әрекеттер жоқ</div>
-        <div class="empty-state-desc">Статистиканы көру үшін алғашқы тапсырманы шешіңіз</div>
+        <p class="empty-state-title">Оқу жолыңыз осы жерден басталады</p>
+        <p class="empty-state-desc">Алғашқы тапсырманы шешіңіз — нәтижесі осында сақталады.</p>
+        <a href="/coding" class="btn btn-primary">Тапсырма алу</a>
     </div>
     {% endif %}
-</div>
-
+</section>
 {% endblock %}

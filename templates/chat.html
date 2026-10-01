@@ -1,45 +1,44 @@
 {% extends "base.html" %}
-{% block title %}AI көмекші — Bilim Al{% endblock %}
-{% block page_title %}AI көмекші{% endblock %}
+{% block title %}Көмекші — Bilim Al{% endblock %}
+{% block page_title %}Көмекші{% endblock %}
 
 {% block content %}
-<div class="card" style="padding:0; overflow:hidden; display:flex; flex-direction:column; height:calc(100vh - 56px - 4rem)">
+<header class="page-heading">
+    <p class="eyebrow">Оқуға көмек</p>
+    <h1>Сұрақ қоюдан бастайық.</h1>
+    <p class="page-description">Кодты талдап, күрделі тақырыпты AI көмекшімен бірге түсініңіз.</p>
+</header>
 
-    <!-- Хабарламалар -->
-    <div class="chat-messages" id="chat-messages">
+<div class="chat-wrap">
+    <div class="chat-messages" id="chat-messages" aria-live="polite" aria-label="Хабарламалар">
         <div class="message ai">
-            <div class="message-avatar">🎓</div>
-            <div class="message-bubble">
-                Сәлем! Мен сенің Python бойынша AI көмекшіңмін. Кез келген сұрақ қой - код, қате, алгоритмдер туралы. Көмектесуге дайынмын! 😊
-            </div>
+            <div class="message-avatar" aria-hidden="true">B</div>
+            <div class="message-bubble">Сәлем! Python туралы сұрағыңызды жазыңыз немесе түсінбеген кодыңызды жіберіңіз. Бірге қарап шығайық.</div>
         </div>
     </div>
 
-    <!-- Жылдам сұрақтар -->
-    <div style="padding:0.75rem 1.5rem; border-top:1px solid var(--border)">
+    <div class="chat-prompts">
+        <p class="chat-input-label">Мына сұрақтардан бастауға болады</p>
         <div class="quick-prompts">
             <button class="quick-prompt" onclick="setQ('Что такое цикл for?')">for циклі дегеніміз не?</button>
-            <button class="quick-prompt" onclick="setQ('Разница между list и tuple?')">List vs Tuple</button>
+            <button class="quick-prompt" onclick="setQ('Разница между list и tuple?')">List пен Tuple айырмашылығы</button>
             <button class="quick-prompt" onclick="setQ('Как работает try/except?')">try/except қалай жұмыс істейді?</button>
             <button class="quick-prompt" onclick="setQ('Объясни lambda функции')">Lambda функциялары</button>
             <button class="quick-prompt" onclick="setQ('Что такое декоратор?')">Декораторлар</button>
         </div>
     </div>
 
-    <!-- Енгізу -->
     <div class="chat-footer">
+        <label class="sr-only" for="chat-input">Сұрағыңыз</label>
         <div class="chat-input-row">
             <textarea id="chat-input" class="chat-textarea" rows="1"
-                placeholder="Сұрағыңызды қойыңыз... (Ctrl+Enter - жіберу)"
+                placeholder="Сұрағыңызды жазыңыз..."
                 onkeydown="handleChatKey(event)"
                 oninput="autoResize(this)"></textarea>
-            <button class="btn btn-primary" id="send-btn" onclick="sendMessage()"
-                    style="align-self:flex-end; padding:0.55rem 1rem">
-                →
-            </button>
+            <button class="btn btn-primary chat-send-btn" id="send-btn" onclick="sendMessage()">Жіберу</button>
         </div>
+        <p class="chat-input-label">Ctrl + Enter — жіберу</p>
     </div>
-
 </div>
 
 <script>
@@ -72,7 +71,7 @@ async function sendMessage() {
         chatHistory.push({ role: 'assistant', content: data.response });
     } catch (e) {
         removeMsg(typingId);
-        addMsg('ai', '❌ Байланыс қатесі');
+        addMsg('ai', 'Байланыс қатесі. Қайта жіберіп көріңіз.');
     } finally {
         btn.disabled = false;
     }
@@ -85,7 +84,7 @@ function addMsg(role, text) {
     div.id = id;
     div.className = `message ${role}`;
     div.innerHTML = `
-        <div class="message-avatar">${role === 'user' ? '👤' : '🎓'}</div>
+        <div class="message-avatar" aria-hidden="true">${role === 'user' ? 'Сіз' : 'B'}</div>
         <div class="message-bubble">${formatMsg(text)}</div>
     `;
     box.appendChild(div);
@@ -100,7 +99,7 @@ function addTyping() {
     div.id = id;
     div.className = 'message ai';
     div.innerHTML = `
-        <div class="message-avatar">🎓</div>
+        <div class="message-avatar" aria-hidden="true">B</div>
         <div class="message-bubble">
             <span class="typing-dot"></span>
             <span class="typing-dot"></span>

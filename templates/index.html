@@ -3,12 +3,15 @@
 {% block page_title %}Практика{% endblock %}
 
 {% block content %}
+<header class="page-heading">
+    <p class="eyebrow">Python практикасы</p>
+    <h1>Біліміңізді кодпен бекітіңіз.</h1>
+    <p class="page-description">Тақырыпты таңдаңыз, тапсырма алыңыз және шешіміңізді тексеріңіз.</p>
+</header>
 
-<div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem">
-
-    <!-- Тапсырма генераторы -->
-    <div class="card">
-        <div class="card-title">Тапсырма генераторы</div>
+<div class="practice-layout">
+    <section class="card" aria-labelledby="practice-settings-heading">
+        <h2 class="component-title" id="practice-settings-heading">Нені үйренеміз?</h2>
         <div class="form-group">
             <label class="form-label" for="topic">Тақырып · {{ topic_count }} тақырып</label>
             <select id="topic">
@@ -22,46 +25,36 @@
             </select>
         </div>
         <div class="form-group">
-            <label class="form-label">Күрделілік</label>
+            <label class="form-label" for="difficulty">Күрделілік</label>
             <select id="difficulty">
                 <option value="beginner">Бастапқы</option>
                 <option value="intermediate">Орташа</option>
                 <option value="advanced">Жоғары</option>
             </select>
         </div>
-        <button class="btn btn-primary" id="gen-btn" onclick="generateTask()">
-            ✨ Генерациялау
-        </button>
-    </div>
+        <button class="btn btn-primary" id="gen-btn" onclick="generateTask()">Тапсырма алу</button>
+    </section>
 
-    <!-- Тапсырма -->
-    <div class="card" id="task-section" style="display:none">
-        <div class="card-title">Тапсырма</div>
+    <section class="card" id="task-section" style="display:none" aria-labelledby="practice-task-heading">
+        <h2 class="component-title" id="practice-task-heading">Сіздің тапсырмаңыз</h2>
         <div id="task-content"></div>
-    </div>
-
+    </section>
 </div>
 
-<!-- Редактор -->
-<div class="card">
-    <div class="card-title">Код редакторы</div>
+<section class="card" aria-labelledby="practice-editor-heading">
+    <h2 class="component-title" id="practice-editor-heading">Шешіміңіз</h2>
+    <label class="sr-only" for="student-code">Python коды</label>
     <textarea id="student-code" class="code-editor"
         placeholder="# Кодыңызды осында жазыңыз..."
-        rows="14"></textarea>
+        rows="14" spellcheck="false"></textarea>
     <div class="btn-group mt-4">
-        <button class="btn btn-primary" onclick="checkCode()">
-            ✅ Кодты тексеру
-        </button>
-        <button class="btn btn-secondary" onclick="explainError()">
-            🔍 Қатені түсіндіру
-        </button>
+        <button class="btn btn-primary" onclick="checkCode()">Кодты тексеру</button>
+        <button class="btn btn-secondary" onclick="explainError()">Қатені түсіндіру</button>
     </div>
-</div>
+</section>
 
-<!-- Нәтиже -->
-<div class="card" id="result-section" style="display:none">
-    <div class="card-title">Нәтиже</div>
-    <div id="result-content"></div>
-</div>
-
+<section class="card" id="result-section" style="display:none" aria-labelledby="practice-result-heading">
+    <h2 class="component-title" id="practice-result-heading">Нәтиже</h2>
+    <div id="result-content" aria-live="polite"></div>
+</section>
 {% endblock %}

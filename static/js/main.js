@@ -39,7 +39,7 @@ async function generateTask() {
             <div style="background:var(--amber-50); border-left:3px solid var(--amber-500);
                         padding:0.75rem 1rem; border-radius:var(--r-sm); margin-bottom:0.8rem">
                 <div style="font-size:12px; font-weight:600; color:var(--amber-600); margin-bottom:0.4rem">
-                    💡 Кеңестер
+                    Кеңестер
                 </div>
                 <ul style="padding-left:1.2rem; font-size:13px; color:var(--amber-600)">
                     ${hints}
@@ -55,7 +55,7 @@ async function generateTask() {
             `<div class="alert alert-error">${e.message}</div>`;
     } finally {
         btn.disabled = false;
-        btn.textContent = '✨ Генерациялау';
+        btn.textContent = 'Тапсырма алу';
     }
 }
 
@@ -82,7 +82,7 @@ async function checkCode() {
         if (!res.ok) throw new Error(data.detail);
 
         const cls = data.score >= 80 ? 'good' : data.score >= 50 ? 'medium' : 'bad';
-        const label = data.is_correct ? '✅ Дұрыс' : '❌ Қателер бар';
+        const label = data.is_correct ? 'Дұрыс' : 'Қателер бар';
         const suggestions = (data.suggestions || []).map(s => `<li>${s}</li>`).join('');
 
         showResult(`
@@ -229,24 +229,28 @@ async function logout() {
 }
 
 // ── ТАҚЫРЫП ────────────────────────────
-function toggleTheme() {
-    const html = document.documentElement;
-    const btn  = document.getElementById('theme-btn');
-    const dark = html.getAttribute('data-theme') === 'dark';
-    if (dark) {
-        html.removeAttribute('data-theme');
-        localStorage.setItem('theme', 'light');
-        if (btn) btn.textContent = '🌙';
-    } else {
-        html.setAttribute('data-theme', 'dark');
-        localStorage.setItem('theme', 'dark');
-        if (btn) btn.textContent = '☀️';
+function syncThemeControl() {
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const button = document.getElementById('theme-btn');
+    if (button) {
+        button.textContent = dark ? 'Күндізгі режим' : 'Түнгі режим';
+        button.setAttribute('aria-pressed', String(dark));
     }
 }
 
-// ── SIDEBAR ────────────────────────────
+function toggleTheme() {
+    const html = document.documentElement;
+    const dark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', dark ? 'light' : 'dark');
+    localStorage.setItem('theme', dark ? 'light' : 'dark');
+    syncThemeControl();
+}
+
 function toggleSidebar() {
-    document.getElementById('sidebar')?.classList.toggle('open');
+    const nav = document.getElementById('sidebar');
+    if (!nav) return;
+    const open = nav.classList.toggle('open');
+    document.querySelector('.header-menu')?.setAttribute('aria-expanded', String(open));
 }
 
 // ── HELPERS ────────────────────────────
@@ -287,12 +291,9 @@ function initCodeBlocks() {
 
 document.addEventListener('DOMContentLoaded', initCodeBlocks);
 
-// Тақырыпты қолдану
+// Restore the selected theme and its accessible control state.
 (function() {
-    const t = localStorage.getItem('theme');
-    if (t === 'dark') {
-        document.documentElement.setAttribute('data-theme', 'dark');
-        const btn = document.getElementById('theme-btn');
-        if (btn) btn.textContent = '☀️';
-    }
+    const theme = localStorage.getItem('theme');
+    if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    syncThemeControl();
 })();
